@@ -1,1 +1,514 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>맞춤형 식단, AI 분석 및 레시피 웹앱</title>
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
+        
+        .app-container { width: 100%; max-width: 480px; background: var(--card-bg); display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        
+        header { padding: 20px; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary-dark); }
+
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card h3 { font-size: 1rem; margin-bottom: 12px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+
+        .notice-banner { background: #FEF3C7; border: 1px solid #F59E0B; color: #B45309; padding: 12px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; margin-bottom: 16px; text-align: center; }
+
+        .ai-feedback-box { background: #EFF6FF; border: 1px solid #3B82F6; color: #1E40AF; padding: 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px; }
+        .ai-feedback-box strong { display: block; margin-bottom: 4px; font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+        .form-group input:focus { border-color: var(--primary); }
+        
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-sm { padding: 6px 10px; font-size: 0.75rem; width: auto; }
+        .btn-recipe { background: #6366F1; color: white; border: none; border-radius: 8px; }
+        .btn-recipe:hover { background: #4F46E5; }
+
+        .nutrient-bar { margin-top: 8px; }
+        .bar-container { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
+
+        nav { position: absolute; bottom: 0; width: 100%; height: 70px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; }
+        nav button { background: none; border: none; font-size: 0.8rem; color: var(--text-sub); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        nav button.active { color: var(--primary); font-weight: 700; }
+        nav button svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .search-results { max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; display: none; background: white; }
+        .search-item { padding: 10px 12px; font-size: 0.85rem; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .search-item:hover { background: #F9FAFB; }
+        
+        .meal-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .meal-list-item button { background: #FEE2E2; color: #EF4444; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        
+        .recommend-card { background: #F9FAFB; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .recommend-info h4 { font-size: 0.9rem; color: var(--text-main); margin-bottom: 2px; }
+        .recommend-info p { font-size: 0.75rem; color: var(--text-sub); }
+        .recommend-btns { display: flex; gap: 4px; }
+
+        /* 레시피 모달 창 스타일 */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 20px; border-radius: 12px; position: relative; max-height: 80vh; overflow-y: auto; }
+        .close-btn { position: absolute; right: 15px; top: 15px; font-size: 1.2rem; cursor: pointer; color: var(--text-sub); }
+
+        .source-footer { font-size: 0.75rem; color: var(--text-sub); text-align: center; margin-top: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>🥗 AI 식단 및 레시피 웹앱</h1>
+        <span id="header-date" style="font-size: 0.85rem; color: var(--text-sub);"></span>
+    </header>
+
+    <div class="content">
+        <!-- 필수 안내 문구 -->
+        <div class="notice-banner">
+            사용자의 정보를 자세히 적어주세요
+        </div>
+
+        <!-- TAB 1: 기록 및 AI 영양 분석 리포트 -->
+        <div id="tab-home" class="tab-content active">
+            <div id="ai-feedback-card" class="ai-feedback-box">
+                <strong>🤖 AI 식단 분석 코칭</strong>
+                <span id="ai-feedback-text">아직 기록된 식단이 없습니다. 식단을 추가하면 실시간 분석과 피드백을 제공해 드립니다!</span>
+            </div>
+
+            <div class="card">
+                <h3>오늘의 영양 리포트 (<span id="disp-date"></span>)</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 1.25rem; font-weight: 700;" id="total-kcal">0</div>
+                        <div style="font-size: 0.75rem; color: var(--text-sub);">총 칼로리 (kcal)</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.25rem; font-weight: 700;" id="target-kcal-disp">2000</div>
+                        <div style="font-size: 0.75rem; color: var(--text-sub);">목표 칼로리</div>
+                    </div>
+                </div>
+                <div class="nutrient-bar">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>탄수화물</span><span id="carbs-val">0g</span></div>
+                    <div class="bar-container"><div id="carbs-bar" class="bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="nutrient-bar" style="margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>단백질</span><span id="protein-val">0g</span></div>
+                    <div class="bar-container"><div id="protein-bar" class="bar-fill" style="width: 0%; background: #3B82F6;"></div></div>
+                </div>
+                <div class="nutrient-bar" style="margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>지방</span><span id="fat-val">0g</span></div>
+                    <div class="bar-container"><div id="fat-bar" class="bar-fill" style="width: 0%; background: #F59E0B;"></div></div>
+                </div>
+                <div class="nutrient-bar" style="margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>나트륨</span><span id="sodium-val">0mg</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>음식 검색 (공공데이터 API)</h3>
+                <div class="form-group">
+                    <label>끼니 구분</label>
+                    <select id="meal-time">
+                        <option value="아침">아침</option>
+                        <option value="점심">점심</option>
+                        <option value="저녁">저녁</option>
+                        <option value="간식">간식</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>식품명 입력 후 검색</label>
+                    <input type="text" id="food-search-input" placeholder="예: 김밥, 닭가슴살, 현미밥..." onkeydown="if(event.key==='Enter') searchFoodAPI()">
+                </div>
+                <button class="btn" onclick="searchFoodAPI()">식품 DB 검색하기</button>
+                <div id="search-results" class="search-results"></div>
+                <div id="selected-food-info" style="font-size: 0.85rem; color: var(--primary-dark); margin-top: 8px; font-weight: 600;"></div>
+                <button class="btn" style="margin-top: 8px; background: #3B82F6;" onclick="addMealItem()">선택한 음식 식단에 추가</button>
+            </div>
+
+            <div class="card">
+                <h3>오늘 기록된 식단</h3>
+                <div id="meal-items-container" style="font-size: 0.85rem; color: var(--text-sub);">기록된 식단이 없습니다.</div>
+            </div>
+            
+            <div class="source-footer">
+                데이터 출처: 식품의약품안전처 식품영양성분DB정보
+            </div>
+        </div>
+
+        <!-- TAB 2: 추천 식단 5가지 및 레시피 탭 -->
+        <div id="tab-recommend" class="tab-content">
+            <div class="card">
+                <h3>💡 맞춤 추천 식단 및 레시피 (5선)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 14px;">
+                    레시피를 확인하고 마음에 드는 식단을 내 식단에 추가해 보세요!
+                </p>
+
+                <!-- 추천 1 -->
+                <div class="recommend-card">
+                    <div class="recommend-info">
+                        <h4>1. 단백질 모닝 세트 (아침)</h4>
+                        <p>삶은 계란 2개 + 바나나 1개 (280kcal)</p>
+                    </div>
+                    <div class="recommend-btns">
+                        <button class="btn btn-sm btn-recipe" onclick="openRecipe(1)">레시피</button>
+                        <button class="btn btn-sm" onclick="addRecommendedMeal('아침', '단백질 모닝 세트', 280, 26, 13, 12, 150)">추가</button>
+                    </div>
+                </div>
+
+                <!-- 추천 2 -->
+                <div class="recommend-card">
+                    <div class="recommend-info">
+                        <h4>2. 닭가슴살 볶음밥 세트 (점심)</h4>
+                        <p>닭가슴살 볶음밥 + 우유 1잔 (500kcal)</p>
+                    </div>
+                    <div class="recommend-btns">
+                        <button class="btn btn-sm btn-recipe" onclick="openRecipe(2)">레시피</button>
+                        <button class="btn btn-sm" onclick="addRecommendedMeal('점심', '닭가슴살 볶음밥 세트', 500, 60, 35, 8, 320)">추가</button>
+                    </div>
+                </div>
+
+                <!-- 추천 3 -->
+                <div class="recommend-card">
+                    <div class="recommend-info">
+                        <h4>3. 연어 스테이크 샐러드 (저녁)</h4>
+                        <p>연어 150g + 채소 샐러드 (350kcal)</p>
+                    </div>
+                    <div class="recommend-btns">
+                        <button class="btn btn-sm btn-recipe" onclick="openRecipe(3)">레시피</button>
+                        <button class="btn btn-sm" onclick="addRecommendedMeal('저녁', '연어 스테이크 샐러드', 350, 10, 32, 16, 210)">추가</button>
+                    </div>
+                </div>
+
+                <!-- 추천 4 -->
+                <div class="recommend-card">
+                    <div class="recommend-info">
+                        <h4>4. 고구마 & 두유 세트 (간식)</h4>
+                        <p>삶은 고구마 1개 + 무가당 두유 (250kcal)</p>
+                    </div>
+                    <div class="recommend-btns">
+                        <button class="btn btn-sm btn-recipe" onclick="openRecipe(4)">레시피</button>
+                        <button class="btn btn-sm" onclick="addRecommendedMeal('간식', '고구마 & 두유 세트', 250, 48, 8, 3, 90)">추가</button>
+                    </div>
+                </div>
+
+                <!-- 추천 5 -->
+                <div class="recommend-card">
+                    <div class="recommend-info">
+                        <h4>5. 저당 닭가슴살 현미 주먹밥 (점심/저녁)</h4>
+                        <p>현미 주먹밥 + 구운 닭가슴살 (410kcal)</p>
+                    </div>
+                    <div class="recommend-btns">
+                        <button class="btn btn-sm btn-recipe" onclick="openRecipe(5)">레시피</button>
+                        <button class="btn btn-sm" onclick="addRecommendedMeal('점심', '저당 닭가슴살 현미 주먹밥', 410, 52, 34, 5, 280)">추가</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: 설정 페이지 -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card">
+                <h3>프로필 및 목표 설정</h3>
+                <div class="form-group">
+                    <label>일일 목표 칼로리 (kcal)</label>
+                    <input type="number" id="set-target-kcal" value="2000">
+                </div>
+                <div class="form-group">
+                    <label>탄수화물 목표 (g)</label>
+                    <input type="number" id="set-carbs" value="250">
+                </div>
+                <div class="form-group">
+                    <label>단백질 목표 (g)</label>
+                    <input type="number" id="set-protein" value="130">
+                </div>
+                <div class="form-group">
+                    <label>지방 목표 (g)</label>
+                    <input type="number" id="set-fat" value="65">
+                </div>
+                <button class="btn" onclick="saveSettings()">설정 저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 레시피 상세 모달 창 -->
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRecipe()">&times;</span>
+            <h3 id="modal-title" style="color: var(--primary-dark); margin-bottom: 10px;">레시피 정보</h3>
+            <div id="modal-body" style="font-size: 0.875rem; line-height: 1.6; color: var(--text-main);"></div>
+        </div>
+    </div>
+
+    <!-- 하단 네비게이션 바 -->
+    <nav>
+        <button class="active" onclick="switchTab('home', this)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            기록/분석
+        </button>
+        <button onclick="switchTab('recommend', this)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            식단추천
+        </button>
+        <button onclick="switchTab('settings', this)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            설정
+        </button>
+    </nav>
+</div>
+
+<script>
+    document.getElementById('header-date').innerText = new Date().toLocaleDateString();
+    document.getElementById('disp-date').innerText = new Date().toLocaleDateString();
+
+    let selectedFood = null;
+    let myMeals = [];
+    let userSettings = {
+        targetKcal: 2000,
+        targetCarbs: 250,
+        targetProtein: 130,
+        targetFat: 65
+    };
+
+    // 레시피 데이터베이스 객체
+    const recipesData = {
+        1: {
+            title: "1. 단백질 모닝 세트 레시피",
+            content: "<b>[준비물]</b> 달걀 2개, 바나나 1개, 소금 약간, 아메리카노<br><br><b>[조리법]</b><br>1. 냄비에 물을 붓고 소금을 살짝 넣은 뒤 물이 끓으면 달걀을 넣습니다.<br>2. 약 10~12분간 삶아준 뒤 찬물에 식혀 껍질을 깝니다.<br>3. 바나나와 아메리카노를 곁들여 맛있게 즐깁니다."
+        },
+        2: {
+            title: "2. 닭가슴살 볶음밥 세트 레시피",
+            content: "<b>[준비물]</b> 냉동 닭가슴살 볶음밥 1팩, 저지방 우유 200ml<br><br><b>[조리법]</b><br>1. 전자레인지용 용기에 볶음밥을 담고 랩을 씌워 3~4분간 돌립니다.<br>2. (또는 팬에 올리브유를 두르고 3~5분간 볶습니다.)<br>3. 저지방 우유 한 잔과 함께 섭취합니다."
+        },
+        3: {
+            title: "3. 연어 스테이크 샐러드 레시피",
+            content: "<b>[준비물]</b> 연어 150g, 샐러드 채소, 올리브유, 소금, 후추<br><br><b>[조리법]</b><br>1. 연어에 소금과 후추로 밑간을 합니다.<br>2. 달군 팬에 올리브유를 두르고 연어 껍질 쪽부터 노릇하게 굽습니다.<br>3. 채소 샐러드 위에 구운 연어를 올려 완성합니다."
+        },
+        4: {
+            title: "4. 고구마 & 두유 세트 레시피",
+            content: "<b>[준비물]</b> 고구마 1개, 무가당 두유 1팩<br><br><b>[조리법]</b><br>1. 고구마를 깨끗이 씻은 뒤 양 끝을 잘라냅니다.<br>2. 찜기에 넣고 센 불에서 끓어오르면 중불로 줄여 20~25분간 푹 찝니다.<br>3. 따뜻한 고구마와 무가당 두유를 함께 먹습니다."
+        },
+        5: {
+            title: "5. 저당 닭가슴살 현미 주먹밥 레시피",
+            content: "<b>[준비물]</b> 현미밥 1공기, 닭가슴살 1팩, 참기름, 김가루<br><br><b>[조리법]</b><br>1. 따뜻한 현미밥에 참기름과 소금 간을 아주 약하게 해 섞습니다.<br>2. 닭가슴살은 잘게 다지거나 찢어 준비합니다.<br>3. 현미밥 속에 닭가슴살을 넣고 주먹밥 모양으로 빚어 김가루를 묻힙니다."
+        }
+    };
+
+    function openRecipe(id) {
+        const recipe = recipesData[id];
+        document.getElementById('modal-title').innerText = recipe.title;
+        document.getElementById('modal-body').innerHTML = recipe.content;
+        document.getElementById('recipe-modal').style.display = 'flex';
+    }
+
+    function closeRecipe() {
+        document.getElementById('recipe-modal').style.display = 'none';
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    function parseNutrient(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        const cleaned = String(val).replace(/,/g, '').trim();
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? 0 : num;
+    }
+
+    async function searchFoodAPI() {
+        const keyword = document.getElementById('food-search-input').value.trim();
+        const resultsBox = document.getElementById('search-results');
+        resultsBox.innerHTML = '<div class="search-item">검색 중...</div>';
+        resultsBox.style.display = 'block';
+
+        if (!keyword) {
+            resultsBox.innerHTML = '<div class="search-item">검색어를 입력해주세요.</div>';
+            return;
+        }
+
+        try {
+            const url = new URL('https://glittery-dasik-3cb269.netlify.app/api/food');
+            url.search = new URLSearchParams({ 
+                pageNo: '1', 
+                numOfRows: '10', 
+                type: 'json', 
+                FOOD_NM_KR: keyword 
+            });
+
+            const response = await fetch(url);
+            const data = await response.json();
+            const resultCode = data?.header?.resultCode;
+            
+            if (resultCode === '03' || !data.body || !data.body.items || data.body.items.length === 0) {
+                resultsBox.innerHTML = '<div class="search-item">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            const items = data.body.items;
+            resultsBox.innerHTML = '';
+
+            items.forEach(item => {
+                const foodName = item.FOOD_NM_KR || '이름 없음';
+                const servingSize = item.SERVING_SIZE || '기준량 미표시';
+                const kcal = parseNutrient(item.AMT_NUM1);
+                const protein = parseNutrient(item.AMT_NUM3);
+                const fat = parseNutrient(item.AMT_NUM4);
+                const carbs = parseNutrient(item.AMT_NUM6);
+                const sodium = parseNutrient(item.AMT_NUM13);
+
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.innerHTML = `<strong>${foodName}</strong> (${servingSize})<br><span style="color:var(--text-sub);">칼로리: ${kcal}kcal | 탄: ${carbs}g | 단: ${protein}g | 지: ${fat}g | 나트륨: ${sodium}mg</span>`;
+                
+                div.onclick = () => {
+                    selectedFood = { name: foodName, serving: servingSize, kcal, carbs, protein, fat, sodium };
+                    document.getElementById('food-search-input').value = foodName;
+                    resultsBox.style.display = 'none';
+                    document.getElementById('selected-food-info').innerText = `선택됨: ${foodName} [${servingSize}] -> ${kcal} kcal`;
+                };
+                resultsBox.appendChild(div);
+            });
+        } catch (error) {
+            console.error(error);
+            resultsBox.innerHTML = '<div class="search-item">네트워크 오류 발생</div>';
+        }
+    }
+
+    function addMealItem() {
+        if (!selectedFood) {
+            alert('검색 결과에서 음식을 선택해주세요!');
+            return;
+        }
+        const time = document.getElementById('meal-time').value;
+        myMeals.push({ ...selectedFood, time });
+        selectedFood = null;
+        document.getElementById('food-search-input').value = '';
+        document.getElementById('selected-food-info').innerText = '';
+        updateDashboard();
+    }
+
+    function addRecommendedMeal(time, name, kcal, carbs, protein, fat, sodium) {
+        myMeals.push({
+            name: name,
+            serving: '추천 1회분',
+            kcal: kcal,
+            carbs: carbs,
+            protein: protein,
+            fat: fat,
+            sodium: sodium,
+            time: time
+        });
+        updateDashboard();
+        alert(`[${name}] 식단이 성공적으로 추가되었습니다!`);
+        switchTab('home', document.querySelector('nav button'));
+    }
+
+    function removeMeal(index) {
+        myMeals.splice(index, 1);
+        updateDashboard();
+    }
+
+    function updateDashboard() {
+        const container = document.getElementById('meal-items-container');
+        if (myMeals.length === 0) {
+            container.innerHTML = '기록된 식단이 없습니다.';
+            document.getElementById('total-kcal').innerText = '0';
+            updateBars(0, 0, 0, 0);
+            updateAIFeedback(0, 0, 0, 0, 0);
+            return;
+        }
+
+        container.innerHTML = '';
+        let totalKcal = 0, totalCarbs = 0, totalProtein = 0, totalFat = 0, totalSodium = 0;
+
+        myMeals.forEach((meal, idx) => {
+            totalKcal += meal.kcal;
+            totalCarbs += meal.carbs;
+            totalProtein += meal.protein;
+            totalFat += meal.fat;
+            totalSodium += meal.sodium;
+
+            const div = document.createElement('div');
+            div.className = 'meal-list-item';
+            div.innerHTML = `<span>[${meal.time}] <b>${meal.name}</b> - ${meal.kcal}kcal</span> <button onclick="removeMeal(${idx})">삭제</button>`;
+            container.appendChild(div);
+        });
+
+        document.getElementById('total-kcal').innerText = totalKcal.toFixed(1);
+        updateBars(totalCarbs, totalProtein, totalFat, totalSodium);
+        updateAIFeedback(totalKcal, totalCarbs, totalProtein, totalFat, totalSodium);
+    }
+
+    function updateBars(carbs, protein, fat, sodium) {
+        document.getElementById('carbs-val').innerText = `${carbs.toFixed(1)}g`;
+        document.getElementById('protein-val').innerText = `${protein.toFixed(1)}g`;
+        document.getElementById('fat-val').innerText = `${fat.toFixed(1)}g`;
+        document.getElementById('sodium-val').innerText = `${sodium.toFixed(1)}mg`;
+
+        document.getElementById('carbs-bar').style.width = Math.min(100, (carbs / userSettings.targetCarbs) * 100) + '%';
+        document.getElementById('protein-bar').style.width = Math.min(100, (protein / userSettings.targetProtein) * 100) + '%';
+        document.getElementById('fat-bar').style.width = Math.min(100, (fat / userSettings.targetFat) * 100) + '%';
+    }
+
+    function updateAIFeedback(kcal, carbs, protein, fat, sodium) {
+        const feedbackText = document.getElementById('ai-feedback-text');
+        let messages = [];
+
+        if (kcal < userSettings.targetKcal * 0.5) {
+            messages.push("💡 현재 섭취 칼로리가 목표치에 비해 많이 부족합니다. 추천 식단의 레시피를 보고 식사를 추가해 보세요.");
+        } else if (kcal > userSettings.targetKcal * 1.1) {
+            messages.push("⚠️ 목표 칼로리를 초과했습니다! 남은 끼니는 가벼운 식단 위주로 조절해 보세요.");
+        }
+
+        if (protein < userSettings.targetProtein * 0.6) {
+            messages.push("🥩 단백질 섭취량이 부족해요. 추천 식단의 닭가슴살이나 연어 레시피를 참고해 보세요.");
+        } else {
+            messages.push("👍 단백질 영양 균형이 아주 훌륭합니다!");
+        }
+
+        if (sodium > 2000) {
+            messages.push("🧂 나트륨 섭취가 다소 높습니다. 물을 충분히 섭취해 주세요.");
+        }
+
+        feedbackText.innerHTML = messages.length === 0 ? "✨ 아주 균형 잡힌 식단을 유지하고 계십니다!" : messages.join("<br>");
+    }
+
+    function saveSettings() {
+        userSettings.targetKcal = parseInt(document.getElementById('set-target-kcal').value) || 2000;
+        userSettings.targetCarbs = parseInt(document.getElementById('set-carbs').value) || 250;
+        userSettings.targetProtein = parseInt(document.getElementById('set-protein').value) || 130;
+        userSettings.targetFat = parseInt(document.getElementById('set-fat').value) || 65;
+
+        document.getElementById('target-kcal-disp').innerText = userSettings.targetKcal;
+        updateDashboard();
+        alert('설정이 안전하게 저장되었습니다!');
+        switchTab('home', document.querySelector('nav button'));
+    }
+</script>
+
+</body>
+</html>
