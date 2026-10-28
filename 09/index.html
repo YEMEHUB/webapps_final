@@ -1,1 +1,974 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>맞춤형 다이어트 & 식단 플래너</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            height: 100dvh; 
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+        }
+        #app-container {
+            width: 100%;
+            max-width: 430px;
+            height: 100%;
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .view-pane {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: white;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        .view-pane.active {
+            display: flex;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .radio-card input:checked + div {
+            border-color: #166534;
+            background-color: #f0fdf4;
+            color: #166534;
+            font-weight: bold;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #166534;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 커스텀 토스트 알림 애니메이션 */
+        @keyframes toastFadeInOut {
+            0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+            10% { opacity: 1; transform: translateY(0) scale(1); }
+            90% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+        }
+        .toast-msg {
+            animation: toastFadeInOut 3s forwards;
+        }
+        
+        /* 커스텀 스크롤바 스타일링 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- Toast 알림 컨테이너 (문제 발생 시 대응 UI) -->
+        <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] max-w-sm"></div>
+
+        <!-- 1. 로딩 뷰 -->
+        <div id="view-loading" class="view-pane active items-center justify-center bg-green-900 text-white z-50">
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <svg class="w-16 h-16 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                </div>
+                <h1 class="text-3xl font-bold mb-4 tracking-tight">Leafy Planner</h1>
+                <div class="loader mx-auto mb-4 border-green-700 border-top-white"></div>
+                <p class="text-sm text-green-200">시스템을 준비중입니다...</p>
+            </div>
+        </div>
+
+        <!-- 2. 로그인 / 회원가입 뷰 -->
+        <div id="view-auth" class="view-pane bg-white px-6 py-10 flex-col justify-center overflow-y-auto">
+            <div class="text-center mb-8 mt-4">
+                <div class="flex justify-center mb-3">
+                    <svg class="w-12 h-12 text-green-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Leafy Planner</h1>
+                <p class="text-sm text-gray-500 mt-2">나만의 맞춤형 다이어트 식단을 설계하세요.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- 이메일/비밀번호 로그인 폼 -->
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-1.5 ml-1">이메일 (아이디)</label>
+                    <input type="email" id="auth-email" placeholder="example@email.com" class="w-full p-3 mb-4 bg-white border border-gray-200 rounded-xl outline-none focus:border-green-800 text-sm">
+                    
+                    <label class="block text-sm font-bold text-gray-700 mb-1.5 ml-1">비밀번호</label>
+                    <input type="password" id="auth-pw" placeholder="6자리 이상 입력" class="w-full p-3 mb-2 bg-white border border-gray-200 rounded-xl outline-none focus:border-green-800 text-sm">
+                </div>
+                
+                <div class="pt-2 space-y-3 pb-6">
+                    <button id="btn-login" class="w-full py-3 bg-green-900 text-white rounded-xl font-bold shadow-md hover:bg-green-800 transition">로그인</button>
+                    <button id="btn-signup" class="w-full py-3 bg-white text-green-900 border border-green-900 rounded-xl font-bold hover:bg-green-50 transition">새로 회원가입하기</button>
+                </div>
+
+                <div class="flex items-center my-4">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="px-3 text-xs text-gray-400 font-medium">또는</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                <button id="btn-guest" class="w-full flex items-center justify-center gap-2 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold shadow-sm transition hover:bg-gray-200 text-sm">
+                    🚀 회원가입 없이 바로 체험하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. 심층 질문 마법사 뷰 (총 20단계) -->
+        <div id="view-wizard" class="view-pane">
+            <header class="p-4 border-b border-gray-100 flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                <div class="w-full bg-gray-200 h-1.5 rounded-full flex-1">
+                    <div id="wizard-progress" class="bg-green-800 h-1.5 rounded-full transition-all duration-300" style="width: 5%;"></div>
+                </div>
+                <span id="wizard-counter" class="text-xs text-gray-400 font-bold ml-1">1/20</span>
+            </header>
+            
+            <main class="flex-1 p-5 flex flex-col justify-between overflow-hidden">
+                <div id="wizard-content" class="flex-1 overflow-y-auto pb-4">
+                    
+                    <!-- Step 1: 닉네임 -->
+                    <div id="step-1" class="wizard-step h-full flex flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">반갑습니다!<br>어떻게 불러드릴까요?</h2>
+                        <p class="text-xs text-gray-500 mb-6">앱 내에서 사용될 닉네임입니다.</p>
+                        <input type="text" id="profile-nickname" placeholder="예: 다이어터냥" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-green-800 text-lg font-bold">
+                    </div>
+
+                    <!-- Step 2: 목표 설정 -->
+                    <div id="step-2" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">가장 중요한<br>목표가 무엇인가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="goal" value="loss" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">🔥 체지방 감량 (다이어트)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="goal" value="muscle" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">💪 근육량 증가 (벌크업)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="goal" value="maintain" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">🥗 체중 유지 및 건강 관리</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: 집중 관리 부위 -->
+                    <div id="step-3" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">가장 신경 쓰이는<br>신체 부위는 어디인가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="target_area" value="belly" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">복부 (뱃살, 러브핸들)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="target_area" value="lower" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">하체 (허벅지, 종아리)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="target_area" value="upper" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">상체 (팔뚝, 등살)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="target_area" value="whole" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">전신 균형</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: 과거 다이어트 경험 -->
+                    <div id="step-4" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">과거 다이어트 경험은<br>어떠셨나요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="past_experience" value="none" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">이번이 처음입니다! 🐣</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="past_experience" value="yoyo" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">감량 후 요요가 왔어요 🥲</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="past_experience" value="fail" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">시도했지만 늘 실패했어요 😭</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="past_experience" value="success" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">감량 후 유지 중(더 빼고 싶음) 😎</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: 다이어트 동기 -->
+                    <div id="step-5" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">현재 다이어트 의지력은<br>어느 정도인가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="willpower" value="high" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">🔥 활활 불타오름 (무조건 한다)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="willpower" value="medium" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">🤔 적당히 꾸준히 할 예정</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="willpower" value="low" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-4 text-center">💧 의지박약 (누가 좀 도와줘요)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: 평소 활동량 -->
+                    <div id="step-6" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">직업 및 평소 활동량은<br>어느 정도인가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="activity" value="sedentary" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🪑 하루 종일 앉아있음 (사무직/학생)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="activity" value="light" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🚶 약간의 돌아다님 (교사/판매직 등)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="activity" value="active" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🏃 육체 노동이 많음 (서비스업/배송 등)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 7: 가장 참기 힘든 유혹 -->
+                    <div id="step-7" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">식단 중 가장 참기 힘든<br>음식의 종류는요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="temptation" value="sweet" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">🍰 달달한 디저트 (빵, 초콜릿, 음료)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="temptation" value="salty" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">🥘 맵고 짠 자극적인 음식 (찌개, 떡볶이)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="temptation" value="carb" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">🍜 헤비한 탄수화물 (라면, 파스타, 밥)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="temptation" value="meat" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">🍖 기름진 고기류 (삼겹살, 치킨)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 8: 배고픈 시간 -->
+                    <div id="step-8" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">하루 중 가장 출출함을<br>느끼는 시간대는요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="hunger_time" value="morning" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">아침 기상 직후 ☀️</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="hunger_time" value="afternoon" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">오후 3~4시쯤 ☕</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="hunger_time" value="night" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">밤 9시 이후 (야식 타임) 🌙</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 9: 운동 가능 시간 -->
+                    <div id="step-9" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">하루 중 운동에 투자할 수 있는<br>시간대는 언제인가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="workout_time" value="morning" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">새벽/아침 (공복 유산소 등)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="workout_time" value="evening" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">퇴근/방과 후 저녁 시간</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="workout_time" value="weekend" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">주말에 몰아서 가능함</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="workout_time" value="none" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">숨쉬기 운동만 할래요 (식단 100%)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 10: 수면 및 수분 -->
+                    <div id="step-10" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">기본적인 생활 습관을<br>알려주세요.</h2>
+                        <p class="text-xs text-gray-500 mb-6">다이어트 성공의 핵심 요소들입니다.</p>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">평균 수면 시간 (시간)</label>
+                                <input type="number" id="profile-sleep" placeholder="예: 7" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center text-lg focus:border-green-800">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">하루 수분 섭취량 (종이컵 기준)</label>
+                                <input type="number" id="profile-water" placeholder="예: 5" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center text-lg focus:border-green-800">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 11: 스트레스 -->
+                    <div id="step-11" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">요즘 스트레스는<br>어느 정도인가요?</h2>
+                        <p class="text-xs text-gray-500 mb-4">코르티솔 호르몬은 체지방 축적에 영향을 줍니다.</p>
+                        <div class="space-y-3">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="stress" value="low" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">😌 평온함 (스트레스 거의 없음)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="stress" value="normal" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🤔 보통 (일상적인 수준)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="stress" value="high" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🤯 심함 (자주 예민하고 지침)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 12: 소화/장 건강 -->
+                    <div id="step-12" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">평소 소화나 장 건강은<br>어떠신가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="digestion" value="good" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">쾌변! 소화가 아주 잘 됨 👍</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="digestion" value="normal" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">무난한 편임 🙂</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="digestion" value="bad" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">변비가 있거나 소화가 잘 안됨 😥</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 13: 기저질환 -->
+                    <div id="step-13" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">현재 앓고 있는 기저질환이나<br>특이사항이 있나요?</h2>
+                        <p class="text-xs text-gray-500 mb-4">무리한 식단을 방지하기 위함입니다.</p>
+                        <div class="space-y-3">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="medical" value="none" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">없음 (건강함)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="medical" value="blood" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">고혈압 / 당뇨 등 대사질환</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="medical" value="joint" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">관절염 / 디스크 등 통증</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="medical" value="other" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">기타 질환 (복용 약물 있음)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 14: 음주 빈도 -->
+                    <div id="step-14" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">음주 빈도는<br>어떻게 되나요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="alcohol" value="none" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">전혀 안 함 (금주) 🚫</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="alcohol" value="sometimes" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">가끔 (주 1~2회) 🍺</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="alcohol" value="often" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">자주 (주 3회 이상) 🥂</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 15: 치팅데이 -->
+                    <div id="step-15" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">치팅데이(보상식사)에 대한<br>생각은 어떠신가요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="cheat_day" value="weekly" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">주 1회는 꼭 먹고 싶은 걸 먹어야 함 🍕</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="cheat_day" value="monthly" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">한 달에 1~2번 정도면 충분함 🍣</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="cheat_day" value="none" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center">목표 달성 전까진 절대 금지! 🙅</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 16: 예산 -->
+                    <div id="step-16" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">다이어트 식단에 쓸<br>한 달 예산은요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="budget" value="low" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">가성비 위주 (직접 요리 선호) 💰</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="budget" value="medium" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">적당한 타협 (적당한 간편식 섞기) 💳</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="budget" value="high" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">여유 있음 (밀키트, 프리미엄 샐러드 등) 💎</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 17: 선호 식단 유형 -->
+                    <div id="step-17" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">선호하는 식단<br>유형이 있나요?</h2>
+                        <div class="space-y-3 mt-4">
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="diet_type" value="general" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🍚 일반 한식 위주 (골고루)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="diet_type" value="keto" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🥑 저탄고지 (탄수화물 최소화)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="diet_type" value="vegan" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🥗 채식 지향 (비건/페스코)</div></label>
+                            <label class="radio-card cursor-pointer block"><input type="radio" name="diet_type" value="protein" class="hidden"><div class="border-2 border-gray-200 rounded-xl p-3 text-center text-sm">🍗 고단백 (닭가슴살 등 적극 활용)</div></label>
+                        </div>
+                    </div>
+
+                    <!-- Step 18: 식사 스타일 -->
+                    <div id="step-18" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">식사 패턴을<br>알려주세요.</h2>
+                        <div class="space-y-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">하루 식사 횟수</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <label class="radio-card cursor-pointer"><input type="radio" name="meal_freq" value="2meals" class="hidden"><div class="border-2 border-gray-200 rounded-lg py-2 text-center text-xs">2끼 (아점 등)</div></label>
+                                    <label class="radio-card cursor-pointer"><input type="radio" name="meal_freq" value="3meals" class="hidden"><div class="border-2 border-gray-200 rounded-lg py-2 text-center text-xs">3끼 (표준)</div></label>
+                                    <label class="radio-card cursor-pointer"><input type="radio" name="meal_freq" value="4meals" class="hidden"><div class="border-2 border-gray-200 rounded-lg py-2 text-center text-xs">4끼 이상</div></label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">주된 식사 준비 방식</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="radio-card cursor-pointer"><input type="radio" name="cooking_time" value="quick" class="hidden"><div class="border-2 border-gray-200 rounded-lg p-2 text-center text-sm">배달/외식/간편식</div></label>
+                                    <label class="radio-card cursor-pointer"><input type="radio" name="cooking_time" value="normal" class="hidden"><div class="border-2 border-gray-200 rounded-lg p-2 text-center text-sm">직접 요리</div></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 19: 알레르기 -->
+                    <div id="step-19" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2 mt-2">피해야 할 음식이나<br>알레르기가 있나요?</h2>
+                        <div class="space-y-4 mt-4">
+                            <textarea id="profile-allergies" rows="4" placeholder="예: 갑각류 알레르기, 오이 싫어함 등&#10;(없으면 비워두고 다음을 누르세요)" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none resize-none focus:border-green-800 text-sm"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step 20: 신체 정보 (최종) -->
+                    <div id="step-20" class="wizard-step h-full hidden flex-col">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 mt-2">마지막으로 신체 정보를<br>정확히 입력해주세요.</h2>
+                        <div class="space-y-4 flex-1 overflow-y-auto">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">성별</label>
+                                    <select id="profile-gender" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none">
+                                        <option value="male">남성</option>
+                                        <option value="female">여성</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">나이</label>
+                                    <input type="number" id="profile-age" placeholder="예: 30" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-green-800">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">키 (cm)</label>
+                                <input type="number" id="profile-height" placeholder="170" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-green-800">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">현재 체중 (kg)</label>
+                                    <input type="number" id="profile-weight" placeholder="70" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none font-bold text-green-900 focus:border-green-800">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">목표 체중 (kg)</label>
+                                    <input type="number" id="profile-target" placeholder="65" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none font-bold text-blue-900 focus:border-green-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex gap-3 shrink-0">
+                    <button id="btn-wizard-prev" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hidden">이전</button>
+                    <button id="btn-wizard-next" class="flex-1 py-3 bg-green-900 text-white rounded-xl font-bold shadow-md">다음으로</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- 4. 메인 대시보드 뷰 (로그인 후) -->
+        <div id="view-dashboard" class="view-pane bg-gray-50 flex-col">
+            <header class="bg-white px-5 pt-6 pb-4 shadow-sm z-10 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-green-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 leading-tight">Leafy Planner</h1>
+                        <p class="text-xs text-gray-500" id="dash-nickname-text">환영합니다!</p>
+                    </div>
+                </div>
+                <button id="btn-logout" class="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition rounded-lg">로그아웃</button>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 space-y-4 relative">
+                <!-- 요약 카드 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full z-0 opacity-50"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-sm text-gray-500 font-medium">현재 체중</span>
+                            <span class="text-sm text-blue-600 font-bold" id="dash-target-weight">목표: -kg</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-bold text-gray-900" id="dash-current-weight">-</span>
+                            <span class="text-lg text-gray-500">kg</span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div id="dash-progress-bar" class="bg-green-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                            <p class="text-xs text-right text-gray-400 mt-1" id="dash-progress-text">0% 달성</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 그래프 카드 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3">체중 변화 추이</h3>
+                    <div class="relative h-48 w-full" id="chart-container">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI 피드백 카드 -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 shadow-sm border border-green-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-green-900 flex items-center gap-1">
+                            <span>✨</span> 초개인화 AI 데일리 플랜
+                        </h3>
+                        <button id="btn-refresh-ai" class="text-xs bg-white px-2 py-1 rounded shadow-sm text-green-800 font-medium hover:bg-green-50 transition">새로고침</button>
+                    </div>
+                    <div id="ai-feedback-content" class="text-sm text-green-800 leading-relaxed min-h-[60px]">
+                        <div class="flex items-center gap-2 text-green-600">
+                            <div class="loader w-4 h-4 border-2"></div>
+                            <span>20가지 데이터를 종합 분석 중입니다...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 분석 결과 보기 버튼 -->
+                <button id="btn-open-report" class="w-full mt-2 py-3 bg-white border border-green-800 text-green-900 hover:bg-green-50 transition rounded-xl font-bold shadow-sm flex justify-center items-center gap-2">
+                    <span>📊</span> 나의 심층 분석 리포트 보기
+                </button>
+                
+                <div class="h-6"></div> <!-- 하단 여백 -->
+            </main>
+
+            <div class="p-4 bg-white border-t border-gray-100 z-20">
+                <button id="btn-open-record" class="w-full py-3.5 bg-green-900 text-white hover:bg-green-800 transition rounded-xl font-bold shadow-lg flex justify-center items-center gap-2">
+                    <span>+</span> 오늘의 체중 기록하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. 기록 추가 모달 뷰 -->
+        <div id="view-record" class="view-pane bg-black/50 justify-end z-50">
+            <div class="bg-white rounded-t-3xl p-6 h-auto mt-auto animate-[slideIn_0.3s_ease-out]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold">오늘의 기록</h3>
+                    <button id="btn-close-record" class="text-gray-400 text-xl font-bold px-2">&times;</button>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm text-gray-500 mb-2">체중 (kg)</label>
+                    <input type="number" id="record-weight" class="w-full p-4 text-2xl font-bold text-center bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-green-800" step="0.1">
+                </div>
+                
+                <button id="btn-save-record" class="w-full py-4 bg-green-900 text-white rounded-xl font-bold hover:bg-green-800 transition">저장하기</button>
+            </div>
+        </div>
+
+        <!-- 6. 분석 결과 리포트 뷰 -->
+        <div id="view-report" class="view-pane bg-gray-50 flex-col z-40">
+            <header class="bg-white p-4 shadow-sm z-10 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-900">심층 분석 리포트</h2>
+                <button id="btn-close-report" class="text-gray-500 font-bold text-xl px-2">&times;</button>
+            </header>
+            
+            <main class="flex-1 overflow-y-auto p-5">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center mb-4">
+                    <h3 class="text-md font-bold text-gray-800 mb-2">나의 다이어트 밸런스 분석</h3>
+                    <p class="text-xs text-gray-500 mb-6">입력하신 20가지 데이터를 기반으로 한 지표입니다.</p>
+                    
+                    <div class="relative w-full aspect-square max-w-[300px] mx-auto mb-4" id="radar-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex gap-3 items-start">
+                    <span class="text-yellow-600">⚠️</span>
+                    <p class="text-xs text-yellow-800 font-medium leading-relaxed">
+                        해당 분석 결과는 알고리즘에 의해 추산된 참고 자료입니다.<br><br>
+                        정확한 건강 상태 및 의학적 소견은 반드시 전문 의료기관 및 의사와 상담하시기 바랍니다.
+                    </p>
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <!-- App Logic (로컬 저장소 기반으로 수정 - 미리보기 완벽 지원) -->
+    <script>
+        const appId = 'diet-planner-app-local';
+        let chartInstance = null;
+        let radarChartInstance = null;
+        let userProfile = null;
+        let weightRecords = [];
+        let wizardStep = 1;
+        const TOTAL_STEPS = 20;
+
+        // iframe 샌드박스 환경(미리보기)에서 localStorage 접근이 막힐 경우를 대비한 메모리 폴백
+        const memoryStorage = {};
+        const storage = {
+            get: (key) => {
+                try { return localStorage.getItem(appId + '_' + key); }
+                catch(e) { return memoryStorage[appId + '_' + key] || null; }
+            },
+            set: (key, value) => {
+                try { localStorage.setItem(appId + '_' + key, value); }
+                catch(e) { memoryStorage[appId + '_' + key] = value; }
+            },
+            remove: (key) => {
+                try { localStorage.removeItem(appId + '_' + key); }
+                catch(e) { delete memoryStorage[appId + '_' + key]; }
+            }
+        };
+
+        // 문제 대응 UI: 모바일 친화적인 Toast 알림 함수
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-3 rounded-lg shadow-lg text-sm text-white font-medium toast-msg ${type === 'error' ? 'bg-red-500' : 'bg-green-600'}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if(toast.parentElement) toast.remove();
+            }, 3000);
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        // --- 앱 초기화 및 로그인 모방 로직 ---
+        function initApp() {
+            const savedUserId = storage.get('userId');
+            if (savedUserId) {
+                checkExistingProfile();
+            } else {
+                switchView('view-auth');
+            }
+        }
+
+        // 로그인/회원가입 공통 처리 (모의 로그인)
+        function handleMockAuth() {
+            switchView('view-loading');
+            setTimeout(() => {
+                storage.set('userId', 'mock_user_123'); // 임의의 유저 ID 저장
+                checkExistingProfile();
+            }, 800);
+        }
+
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const pw = document.getElementById('auth-pw').value;
+            if(!email || !pw) return showToast("이메일과 비밀번호를 입력해주세요.");
+            handleMockAuth();
+        });
+
+        document.getElementById('btn-signup').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const pw = document.getElementById('auth-pw').value;
+            if(!email || !pw) return showToast("가입할 이메일과 비밀번호를 입력해주세요.");
+            if(pw.length < 6) return showToast("비밀번호는 6자리 이상이어야 합니다.");
+            handleMockAuth();
+        });
+
+        document.getElementById('btn-guest').addEventListener('click', () => {
+            handleMockAuth();
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            if(confirm("로그아웃 하시겠습니까?")) {
+                storage.remove('userId');
+                userProfile = null;
+                weightRecords = [];
+                document.getElementById('auth-email').value = '';
+                document.getElementById('auth-pw').value = '';
+                if(chartInstance) chartInstance.destroy();
+                if(radarChartInstance) radarChartInstance.destroy();
+                switchView('view-auth');
+            }
+        });
+
+        function checkExistingProfile() {
+            const savedProfile = storage.get('profile');
+            if (savedProfile) {
+                userProfile = JSON.parse(savedProfile);
+                loadRecords();
+                switchView('view-dashboard');
+                updateDashboardUI();
+                generateAIFeedback();
+            } else {
+                wizardStep = 1;
+                updateWizardUI();
+                switchView('view-wizard');
+            }
+        }
+
+        // --- Wizard (설문 마법사) 로직 ---
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                setTimeout(() => document.getElementById('btn-wizard-next').click(), 250);
+            });
+        });
+
+        document.getElementById('btn-wizard-next').addEventListener('click', () => {
+            if (wizardStep === 1 && !document.getElementById('profile-nickname').value.trim()) return showToast("닉네임을 입력해주세요.");
+            if (wizardStep === 2 && !document.querySelector('input[name="goal"]:checked')) return showToast("목표를 선택해주세요.");
+            if (wizardStep === 3 && !document.querySelector('input[name="target_area"]:checked')) return showToast("신경 쓰이는 부위를 선택해주세요.");
+            if (wizardStep === 4 && !document.querySelector('input[name="past_experience"]:checked')) return showToast("과거 경험을 선택해주세요.");
+            if (wizardStep === 5 && !document.querySelector('input[name="willpower"]:checked')) return showToast("의지력을 선택해주세요.");
+            if (wizardStep === 6 && !document.querySelector('input[name="activity"]:checked')) return showToast("활동량을 선택해주세요.");
+            if (wizardStep === 7 && !document.querySelector('input[name="temptation"]:checked')) return showToast("참기 힘든 유혹을 선택해주세요.");
+            if (wizardStep === 8 && !document.querySelector('input[name="hunger_time"]:checked')) return showToast("배고픈 시간을 선택해주세요.");
+            if (wizardStep === 9 && !document.querySelector('input[name="workout_time"]:checked')) return showToast("운동 가능 시간을 선택해주세요.");
+            
+            if (wizardStep === 10) {
+                const s = document.getElementById('profile-sleep').value;
+                const w = document.getElementById('profile-water').value;
+                if(!s || !w || s<0 || w<0) return showToast("올바른 수면 시간과 수분량을 입력해주세요.");
+            }
+            
+            if (wizardStep === 11 && !document.querySelector('input[name="stress"]:checked')) return showToast("스트레스 상태를 선택해주세요.");
+            if (wizardStep === 12 && !document.querySelector('input[name="digestion"]:checked')) return showToast("장 건강 상태를 선택해주세요.");
+            if (wizardStep === 13 && !document.querySelector('input[name="medical"]:checked')) return showToast("기저질환 유무를 선택해주세요.");
+            if (wizardStep === 14 && !document.querySelector('input[name="alcohol"]:checked')) return showToast("음주 빈도를 선택해주세요.");
+            if (wizardStep === 15 && !document.querySelector('input[name="cheat_day"]:checked')) return showToast("치팅데이 선호도를 선택해주세요.");
+            if (wizardStep === 16 && !document.querySelector('input[name="budget"]:checked')) return showToast("예산을 선택해주세요.");
+            if (wizardStep === 17 && !document.querySelector('input[name="diet_type"]:checked')) return showToast("선호 식단을 선택해주세요.");
+            
+            if (wizardStep === 18) {
+                if(!document.querySelector('input[name="meal_freq"]:checked') || !document.querySelector('input[name="cooking_time"]:checked')) 
+                    return showToast("식사 패턴(횟수, 준비방식)을 모두 선택해주세요.");
+            }
+            
+            if (wizardStep === 20) {
+                const age = document.getElementById('profile-age').value;
+                const h = document.getElementById('profile-height').value;
+                const w = document.getElementById('profile-weight').value;
+                const tw = document.getElementById('profile-target').value;
+                if(!age || !h || !w || !tw || age<=0 || h<=0 || w<=0 || tw<=0) return showToast("신체 정보를 정확한 숫자로 입력해주세요.");
+                
+                saveProfile();
+                return;
+            }
+            
+            wizardStep++;
+            updateWizardUI();
+        });
+
+        document.getElementById('btn-wizard-prev').addEventListener('click', () => {
+            if (wizardStep > 1) {
+                wizardStep--;
+                updateWizardUI();
+            }
+        });
+
+        function updateWizardUI() {
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+            const currentStepEl = document.getElementById(`step-${wizardStep}`);
+            if(currentStepEl) currentStepEl.classList.remove('hidden');
+            
+            document.getElementById('btn-wizard-prev').classList.toggle('hidden', wizardStep === 1);
+            document.getElementById('btn-wizard-next').innerText = wizardStep === TOTAL_STEPS ? "분석 완료 및 시작하기" : "다음으로";
+            document.getElementById('wizard-progress').style.width = `${(wizardStep / TOTAL_STEPS) * 100}%`;
+            document.getElementById('wizard-counter').innerText = `${wizardStep}/${TOTAL_STEPS}`;
+        }
+
+        function saveProfile() {
+            userProfile = {
+                nickname: document.getElementById('profile-nickname').value,
+                goal: document.querySelector('input[name="goal"]:checked').value,
+                targetArea: document.querySelector('input[name="target_area"]:checked').value,
+                pastExperience: document.querySelector('input[name="past_experience"]:checked').value,
+                willpower: document.querySelector('input[name="willpower"]:checked').value,
+                activity: document.querySelector('input[name="activity"]:checked').value,
+                temptation: document.querySelector('input[name="temptation"]:checked').value,
+                hungerTime: document.querySelector('input[name="hunger_time"]:checked').value,
+                workoutTime: document.querySelector('input[name="workout_time"]:checked').value,
+                sleepHours: document.getElementById('profile-sleep').value,
+                waterCups: document.getElementById('profile-water').value,
+                stress: document.querySelector('input[name="stress"]:checked').value,
+                digestion: document.querySelector('input[name="digestion"]:checked').value,
+                medical: document.querySelector('input[name="medical"]:checked').value,
+                alcohol: document.querySelector('input[name="alcohol"]:checked').value,
+                cheatDay: document.querySelector('input[name="cheat_day"]:checked').value,
+                budget: document.querySelector('input[name="budget"]:checked').value,
+                dietType: document.querySelector('input[name="diet_type"]:checked').value,
+                mealFreq: document.querySelector('input[name="meal_freq"]:checked').value,
+                cookingTime: document.querySelector('input[name="cooking_time"]:checked').value,
+                allergies: document.getElementById('profile-allergies').value || '없음',
+                gender: document.getElementById('profile-gender').value,
+                age: document.getElementById('profile-age').value,
+                height: document.getElementById('profile-height').value,
+                startWeight: parseFloat(document.getElementById('profile-weight').value),
+                targetWeight: parseFloat(document.getElementById('profile-target').value),
+                createdAt: new Date().toISOString()
+            };
+
+            switchView('view-loading');
+            
+            // 로컬에 프로필 저장
+            storage.set('profile', JSON.stringify(userProfile));
+            
+            // 초기 체중 기록
+            logWeight(userProfile.startWeight, true);
+            
+            setTimeout(() => {
+                switchView('view-dashboard');
+                updateDashboardUI();
+                generateAIFeedback();
+            }, 800);
+        }
+
+        // --- Dashboard & Chart Logic ---
+        function loadRecords() {
+            const savedRecords = storage.get('records');
+            if (savedRecords) {
+                weightRecords = JSON.parse(savedRecords);
+                weightRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+            } else {
+                weightRecords = [];
+            }
+            setTimeout(renderChart, 100);
+        }
+
+        function logWeight(weightVal, isInitial = false) {
+            const today = new Date().toISOString().split('T')[0];
+            const newRecord = {
+                id: Date.now().toString(),
+                weight: parseFloat(weightVal),
+                date: isInitial ? new Date(Date.now() - 86400000).toISOString().split('T')[0] : today, 
+                timestamp: Date.now()
+            };
+            
+            // 같은 날짜 기록이 있으면 덮어쓰기
+            const existingIndex = weightRecords.findIndex(r => r.date === newRecord.date);
+            if(existingIndex >= 0) {
+                weightRecords[existingIndex] = newRecord;
+            } else {
+                weightRecords.push(newRecord);
+            }
+            
+            storage.set('records', JSON.stringify(weightRecords));
+            loadRecords(); // 리로드
+            updateDashboardUI();
+        }
+
+        function updateDashboardUI() {
+            if (!userProfile) return;
+            
+            document.getElementById('dash-nickname-text').innerText = `${userProfile.nickname}님의 맞춤형 플랜`;
+            document.getElementById('dash-target-weight').innerText = `목표: ${userProfile.targetWeight}kg`;
+            
+            let currentW = userProfile.startWeight;
+            if (weightRecords.length > 0) currentW = weightRecords[weightRecords.length - 1].weight;
+            document.getElementById('dash-current-weight').innerText = currentW.toFixed(1);
+            
+            const totalDiff = Math.abs(userProfile.startWeight - userProfile.targetWeight);
+            const currentDiff = Math.abs(currentW - userProfile.startWeight);
+            let progress = 0;
+            
+            if (totalDiff > 0 && ((userProfile.goal === 'loss' && currentW <= userProfile.startWeight) || (userProfile.goal === 'muscle' && currentW >= userProfile.startWeight))) {
+                progress = Math.min((currentDiff / totalDiff) * 100, 100);
+            }
+            if(userProfile.goal === 'maintain') progress = 100;
+
+            document.getElementById('dash-progress-bar').style.width = `${progress}%`;
+            document.getElementById('dash-progress-text').innerText = `${progress.toFixed(0)}% 달성`;
+        }
+
+        function renderChart() {
+            const container = document.getElementById('chart-container');
+            if(!container || container.clientWidth === 0) return;
+
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            const labels = weightRecords.map(r => r.date.substring(5));
+            const data = weightRecords.map(r => r.weight);
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length > 0 ? labels : ['시작'],
+                    datasets: [{
+                        label: '체중 (kg)',
+                        data: data.length > 0 ? data : [userProfile.startWeight],
+                        borderColor: '#166534',
+                        backgroundColor: 'rgba(22, 101, 52, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#166534',
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: Math.min(userProfile.targetWeight, ...data) - 2,
+                            max: Math.max(userProfile.startWeight, ...data) + 2,
+                            grid: { color: '#f3f4f6' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // --- AI 시뮬레이션 ---
+        function generateAIFeedback() {
+            const feedbackBox = document.getElementById('ai-feedback-content');
+            feedbackBox.innerHTML = `
+                <div class="flex items-center gap-2 text-green-600">
+                    <div class="loader w-4 h-4 border-2"></div>
+                    <span>${userProfile.nickname}님의 데이터를 종합 분석 중입니다...</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                let dietTypeName = "일반식";
+                if(userProfile.dietType === 'keto') dietTypeName = "저탄고지";
+                if(userProfile.dietType === 'vegan') dietTypeName = "채식 위주";
+                if(userProfile.dietType === 'protein') dietTypeName = "고단백 식단";
+
+                let temptationName = "간식";
+                if(userProfile.temptation === 'sweet') temptationName = "달달한 디저트";
+                if(userProfile.temptation === 'salty') temptationName = "맵고 짠 자극적인 음식";
+                if(userProfile.temptation === 'carb') temptationName = "라면, 빵 등 무거운 탄수화물";
+                if(userProfile.temptation === 'meat') temptationName = "기름진 고기";
+
+                const aiText = `
+                    <div class="animate-[slideIn_0.3s_ease-out]">
+                        <p class="font-bold mb-3 text-green-900">✨ 분석 완료! ${userProfile.nickname}님을 위한 가이드</p>
+                        <ul class="space-y-1.5 text-sm text-gray-800 list-disc list-inside">
+                            <li>현재 <b>${userProfile.targetArea === 'whole' ? '전신' : userProfile.targetArea === 'belly' ? '복부' : userProfile.targetArea === 'lower' ? '하체' : '상체'}</b> 관리에 집중하기 위해 <b>${userProfile.workoutTime === 'none' ? '가벼운 걷기와 스트레칭' : userProfile.workoutTime === 'morning' ? '아침 공복 운동' : userProfile.workoutTime === 'evening' ? '퇴근 후 저녁 운동' : '주말 집중 운동'}</b>을 추천합니다.</li>
+                            <li>식단은 <b>${dietTypeName}</b>(으)로 구성하고, 평소 좋아하시는 <b>${temptationName}</b>의 유혹을 특히 조심하세요!</li>
+                            <li>수분 섭취와 수면 시간 확보는 다이어트 성공의 핵심입니다.</li>
+                        </ul>
+                        <div class="mt-4 bg-white/50 border border-green-200 p-2.5 rounded-lg text-center shadow-sm">
+                            <p class="text-green-800 font-bold">오늘도 목표 체중(${userProfile.targetWeight}kg)을 향해 화이팅! 🔥</p>
+                        </div>
+                    </div>
+                `;
+                feedbackBox.innerHTML = aiText;
+            }, 1200);
+        }
+
+        // --- 기타 이벤트 리스너 ---
+        document.getElementById('btn-open-record').addEventListener('click', () => {
+            let currentW = userProfile?.startWeight || 0;
+            if (weightRecords.length > 0) currentW = weightRecords[weightRecords.length - 1].weight;
+            document.getElementById('record-weight').value = currentW;
+            switchView('view-record');
+        });
+
+        document.getElementById('btn-close-record').addEventListener('click', () => switchView('view-dashboard'));
+
+        document.getElementById('btn-open-report').addEventListener('click', () => {
+            switchView('view-report');
+            setTimeout(renderRadarChart, 100);
+        });
+        document.getElementById('btn-close-report').addEventListener('click', () => switchView('view-dashboard'));
+
+        function renderRadarChart() {
+            if (!userProfile) return;
+            const container = document.getElementById('radar-container');
+            if(!container || container.clientWidth === 0) return;
+
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            let routineScore = userProfile.workoutTime !== 'none' ? 85 : 40;
+            let stressScore = userProfile.stress === 'low' ? 90 : userProfile.stress === 'normal' ? 70 : 40;
+            let temptationResistScore = userProfile.temptation === 'sweet' || userProfile.temptation === 'carb' ? 50 : 80;
+            let willpowerScore = userProfile.willpower === 'high' ? 95 : userProfile.willpower === 'medium' ? 70 : 40;
+            let habitScore = (userProfile.sleepHours >= 7 ? 50 : 25) + (userProfile.waterCups >= 6 ? 50 : 25);
+
+            if (radarChartInstance) radarChartInstance.destroy();
+
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['운동 지속성', '스트레스 관리', '유혹 방어력', '다이어트 의지', '기본 생활 습관'],
+                    datasets: [{
+                        label: '나의 점수',
+                        data: [routineScore, stressScore, temptationResistScore, willpowerScore, habitScore],
+                        backgroundColor: 'rgba(22, 101, 52, 0.2)',
+                        borderColor: 'rgba(22, 101, 52, 1)',
+                        pointBackgroundColor: 'rgba(22, 101, 52, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        document.getElementById('btn-save-record').addEventListener('click', () => {
+            const val = document.getElementById('record-weight').value;
+            if(!val) return showToast("체중을 입력해주세요.");
+            
+            logWeight(val);
+            showToast("기록이 성공적으로 저장되었습니다.", "success");
+            switchView('view-dashboard');
+            generateAIFeedback(); 
+        });
+
+        document.getElementById('btn-refresh-ai').addEventListener('click', () => generateAIFeedback());
+
+        // 앱 시작
+        initApp();
+
+    </script>
+</body>
+</html>
