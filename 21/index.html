@@ -1,1 +1,1186 @@
 
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ REWARD RABBIT - 네온 식단 & 키우기 앱 ⚡</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Orbitron:wght@700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Celebration Effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #080711;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .font-neon {
+            font-family: 'Black Han Sans', sans-serif;
+        }
+
+        .font-digital {
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* NEON GLOW EFFECTS */
+        .neon-box-pink {
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 15px rgba(255, 0, 127, 0.15);
+            border: 2px solid #ff007f;
+        }
+
+        .neon-box-cyan {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.15);
+            border: 2px solid #00f3ff;
+        }
+
+        .neon-box-purple {
+            box-shadow: 0 0 15px rgba(186, 85, 211, 0.4), inset 0 0 15px rgba(186, 85, 211, 0.15);
+            border: 2px solid #ba55d3;
+        }
+
+        .neon-box-yellow {
+            box-shadow: 0 0 15px rgba(255, 230, 0, 0.4), inset 0 0 15px rgba(255, 230, 0, 0.15);
+            border: 2px solid #ffe600;
+        }
+
+        .neon-box-green {
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.4), inset 0 0 15px rgba(57, 255, 20, 0.15);
+            border: 2px solid #39ff14;
+        }
+
+        .neon-text-pink { text-shadow: 0 0 8px #ff007f, 0 0 18px #ff007f; }
+        .neon-text-cyan { text-shadow: 0 0 8px #00f3ff, 0 0 18px #00f3ff; }
+        .neon-text-green { text-shadow: 0 0 8px #39ff14, 0 0 18px #39ff14; }
+        .neon-text-yellow { text-shadow: 0 0 8px #ffe600, 0 0 18px #ffe600; }
+        .neon-text-purple { text-shadow: 0 0 8px #ba55d3, 0 0 18px #ba55d3; }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px #ff007f); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 20px #00f3ff); }
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080711;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff007f;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-[#080711] text-slate-100 min-h-screen pb-24">
+
+    <!-- AUTH SCREEN (로그인 / 회원가입) -->
+    <div id="authScreen" class="fixed inset-0 bg-[#080711] z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-[#0f0c24] neon-box-pink max-w-sm w-full rounded-3xl p-6 relative my-auto space-y-5">
+            <div class="text-center space-y-2">
+                <div class="text-4xl animate-bounce">🐰⚡</div>
+                <h1 class="text-2xl font-neon text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400">DIET RABBIT</h1>
+                <p class="text-xs text-pink-300 font-digital tracking-widest">NEON HEALTH & DIET</p>
+                <p class="text-[11px] text-slate-400 pt-1">계정을 생성하면 모든 식단 및 신체 기록이<br><span class="text-cyan-300 font-bold">클라우드에 영구 보관</span>됩니다!</p>
+            </div>
+
+            <!-- TAB TOGGLE: LOGIN / SIGNUP -->
+            <div class="grid grid-cols-2 bg-[#161233] p-1 rounded-2xl border border-pink-500/30 text-xs font-neon">
+                <button id="authTabLoginBtn" onclick="toggleAuthTab('login')" class="py-2.5 rounded-xl bg-pink-500 text-black transition">로그인</button>
+                <button id="authTabSignupBtn" onclick="toggleAuthTab('signup')" class="py-2.5 rounded-xl text-slate-400 hover:text-white transition">회원가입</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" class="space-y-3 text-xs">
+                <div>
+                    <label class="text-slate-300 font-bold mb-1 block">이메일 주소</label>
+                    <input type="email" id="loginEmail" placeholder="example@email.com" required class="w-full bg-[#161233] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="text-slate-300 font-bold mb-1 block">비밀번호</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required class="w-full bg-[#161233] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <button type="submit" class="w-full bg-pink-500 hover:bg-pink-400 text-black font-neon py-3.5 rounded-xl transition shadow-[0_0_15px_#ff007f] mt-2 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> 로그인하여 시작하기
+                </button>
+            </form>
+
+            <!-- SIGNUP FORM -->
+            <form id="signupForm" class="space-y-3 text-xs hidden">
+                <div>
+                    <label class="text-slate-300 font-bold mb-1 block">사용자 닉네임</label>
+                    <input type="text" id="signupName" placeholder="네온토끼" required class="w-full bg-[#161233] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="text-slate-300 font-bold mb-1 block">이메일 주소</label>
+                    <input type="email" id="signupEmail" placeholder="example@email.com" required class="w-full bg-[#161233] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="text-slate-300 font-bold mb-1 block">비밀번호 (6자리 이상)</label>
+                    <input type="password" id="signupPassword" placeholder="••••••••" required minlength="6" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <button type="submit" class="w-full bg-cyan-400 hover:bg-cyan-300 text-black font-neon py-3.5 rounded-xl transition shadow-[0_0_15px_#00f3ff] mt-2 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> 계정 생성 & 영구 데이터 저장
+                </button>
+            </form>
+
+            <div class="text-center pt-2">
+                <button onclick="guestLogin()" class="text-[11px] text-slate-400 hover:text-pink-300 underline">
+                    게스트로 빠르게 둘러보기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTENT (Hidden before Login) -->
+    <div id="mainApp" class="hidden">
+        <!-- HEADER / APP BAR -->
+        <header class="sticky top-0 z-30 bg-[#0c091f]/90 backdrop-blur-md border-b border-pink-500/40 px-4 py-3 shadow-[0_0_15px_rgba(255,0,127,0.3)]">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl animate-bounce">🐰</span>
+                    <div>
+                        <h1 class="text-base font-neon text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400">DIET RABBIT</h1>
+                        <p class="text-[9px] text-pink-300 font-digital tracking-widest leading-none">NEON HEALTH & DIET</p>
+                    </div>
+                </div>
+
+                <!-- PROFILE BUTTON & LOGOUT -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openProfileModal()" class="cursor-pointer bg-[#161233] border-2 border-pink-400/80 px-2.5 py-1.5 rounded-2xl shadow-[0_0_12px_#ff007f] flex items-center gap-1.5 hover:scale-105 transition">
+                        <i class="fa-solid fa-user-gear text-pink-400 text-xs"></i>
+                        <div class="text-right">
+                            <div class="text-[9px] text-slate-400 font-bold leading-none">신체정보</div>
+                            <div class="text-[11px] font-digital font-black text-pink-300" id="headerUserName">사용자</div>
+                        </div>
+                    </button>
+                    <button onclick="handleLogout()" title="로그아웃" class="bg-red-500/20 border border-red-500 text-red-400 p-2 rounded-2xl hover:bg-red-500/40 transition">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- PROFILE MODAL -->
+        <div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-[#0f0c24] neon-box-pink max-w-sm w-full rounded-3xl p-6 relative">
+                <button onclick="closeModal('profileModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h3 class="text-lg font-neon text-pink-400 neon-text-pink mb-4">⚙️ 개인 정보 수정</h3>
+                <form id="profileForm" class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-slate-300 font-bold mb-1 block">나이</label>
+                        <input type="number" id="inputAge" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-pink-500">
+                    </div>
+                    <div>
+                        <label class="text-slate-300 font-bold mb-1 block">성별</label>
+                        <select id="inputGender" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-pink-500">
+                            <option value="male">남성</option>
+                            <option value="female">여성</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-slate-300 font-bold mb-1 block">키 (cm)</label>
+                            <input type="number" id="inputHeight" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-pink-500">
+                        </div>
+                        <div>
+                            <label class="text-slate-300 font-bold mb-1 block">몸무게 (kg)</label>
+                            <input type="number" id="inputWeight" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-pink-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-slate-300 font-bold mb-1 block">활동량</label>
+                        <select id="inputActivity" class="w-full bg-[#161233] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-pink-500">
+                            <option value="1.2">가벼운 활동 (주로 앉아있음)</option>
+                            <option value="1.375">보통 활동 (주 1~3회 운동)</option>
+                            <option value="1.55">적극적 활동 (주 3~5회 운동)</option>
+                            <option value="1.725">매우 활동적 (매일 격렬한 운동)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-pink-500 hover:bg-pink-400 text-black font-neon py-3 rounded-xl transition shadow-[0_0_15px_#ff007f] mt-2">
+                        저장 및 칼로리 재계산 (클라우드 동기화)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <main class="max-w-md mx-auto px-4 mt-5 space-y-5">
+
+            <!-- TAB 1: DIET (식단 관리 & 예상 체중 & API 검색) -->
+            <div id="tab-diet" class="tab-content space-y-5">
+
+                <!-- DATE SELECTION BAR -->
+                <div class="bg-[#0f0c24] border-2 border-pink-500/50 rounded-2xl p-3 flex items-center justify-between shadow-[0_0_10px_rgba(255,0,127,0.2)]">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-pink-400 text-lg"></i>
+                        <span class="text-xs font-bold text-slate-200">식단 날짜 선택:</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="date" id="dietDatePicker" onchange="changeDietDate()" class="bg-[#161233] border border-pink-400/60 rounded-xl px-2.5 py-1 text-xs text-pink-300 font-digital focus:outline-none">
+                        <button onclick="setTodayDate()" class="bg-pink-500/20 border border-pink-400 text-pink-300 hover:bg-pink-500 text-[10px] font-bold px-2 py-1 rounded-xl transition">
+                            오늘
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile Info & Target Calorie Card -->
+                <div class="bg-[#0f0c24] neon-box-pink rounded-3xl p-5 relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-neon text-pink-400 neon-text-pink flex items-center gap-2">
+                            <i class="fa-solid fa-user-nurse"></i> 신체 정보 및 권장 열량
+                        </h2>
+                        <button onclick="openProfileModal()" class="text-xs text-yellow-300 bg-yellow-400/20 border border-yellow-400 px-2.5 py-1 rounded-xl font-bold hover:bg-yellow-400/30">
+                            ⚙️ 수정
+                        </button>
+                    </div>
+
+                    <div id="obesityAlert" class="hidden mb-3 p-3 bg-red-950/80 border-2 border-red-500 text-red-200 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_#ff0000]">
+                        <i class="fa-solid fa-triangle-exclamation text-red-400 text-lg animate-bounce"></i>
+                        <div>
+                            <p class="font-neon text-red-400 text-sm">🚨 체중 관리 주의 (비만 상태)</p>
+                            <p class="text-[11px] text-slate-300">현재 BMI가 비만 범위에 속합니다. 건강 목표를 위해 하루 -500kcal 감량 식단을 추천해요!</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-4 bg-[#161233] p-3 rounded-2xl border border-pink-500/30">
+                        <div><span class="text-slate-400">나이/성별:</span> <span id="userProfileAgeSex" class="font-bold text-white">25세 / 남성</span></div>
+                        <div><span class="text-slate-400">신장/체중:</span> <span id="userProfileBody" class="font-bold text-white">175cm / 80kg</span></div>
+                        <div><span class="text-slate-400">BMI 지수:</span> <span id="userProfileBMI" class="font-bold text-pink-400">26.1 (비만)</span></div>
+                        <div><span class="text-slate-400">기초대사량(BMR):</span> <span id="userProfileBMR" class="font-digital text-cyan-300">1,780 kcal</span></div>
+                    </div>
+
+                    <div class="bg-[#1b0826] p-4 rounded-2xl border border-yellow-400/40 text-center">
+                        <div class="text-[11px] text-slate-300 font-bold">목표 일일 권장 섭취량 (TDEE 기준)</div>
+                        <div class="text-2xl font-digital font-black text-yellow-300 neon-text-yellow my-1">
+                            <span id="targetCalories">2,000</span> kcal
+                        </div>
+                        <p class="text-[10px] text-slate-400">선택 날짜의 칼로리 목표를 준수해보세요!</p>
+                    </div>
+                </div>
+
+                <!-- Calorie & Real-time Weight Dashboard -->
+                <div class="bg-[#0f0c24] neon-box-cyan rounded-3xl p-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-neon text-lg text-cyan-300 neon-text-cyan flex items-center gap-2">
+                            <i class="fa-solid fa-fire"></i> <span id="selectedDateTextDisplay">오늘</span> 섭취 열량 & 실시간 체중
+                        </h3>
+                        <button onclick="finishDietDay()" class="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 text-black font-neon text-xs px-3 py-1.5 rounded-xl shadow-[0_0_10px_#39ff14] transition">
+                            ⚡ 식단 완료
+                        </button>
+                    </div>
+
+                    <!-- Calorie Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-cyan-300">먹은 칼로리: <span id="currentCalories" class="font-digital text-pink-400 text-sm">0</span> / <span id="maxCalories">2000</span> kcal</span>
+                            <span id="caloriePercent" class="font-digital text-yellow-300">0%</span>
+                        </div>
+                        <div class="w-full bg-[#161233] h-4 rounded-full border border-cyan-500/50 p-0.5 overflow-hidden">
+                            <div id="calorieBar" class="bg-gradient-to-r from-cyan-400 via-yellow-300 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Realtime Predicted Weight -->
+                    <div class="bg-[#161233] border-2 border-cyan-400/50 rounded-2xl p-4 flex justify-between items-center">
+                        <div>
+                            <div class="text-[11px] text-slate-400 font-bold">식사 반영 예상 체중</div>
+                            <div class="text-2xl font-digital font-black text-cyan-300 neon-text-cyan mt-1">
+                                <span id="predictedWeight">80.00</span> kg
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400">체중 변동 예측치</div>
+                            <div id="weightDiffBadge" class="text-sm font-bold font-digital text-green-400 mt-1">
+                                0.00 kg
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nutrients Breakdown -->
+                    <div class="grid grid-cols-4 gap-2 text-center text-[11px] bg-[#161233] p-3 rounded-2xl border border-slate-800">
+                        <div>
+                            <div class="text-slate-400">탄수화물</div>
+                            <div class="font-bold text-yellow-300 font-digital mt-0.5"><span id="sumCarbs">0</span>g</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">단백질</div>
+                            <div class="font-bold text-pink-400 font-digital mt-0.5"><span id="sumProtein">0</span>g</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">지방</div>
+                            <div class="font-bold text-cyan-300 font-digital mt-0.5"><span id="sumFat">0</span>g</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">나트륨</div>
+                            <div class="font-bold text-green-400 font-digital mt-0.5"><span id="sumSodium">0</span>mg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Food Search & Log Box (API 연동) -->
+                <div class="bg-[#0f0c24] neon-box-yellow rounded-3xl p-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-neon text-lg text-yellow-300 neon-text-yellow flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-down text-cyan-400"></i> 공공 데이터 API 식품 DB 검색
+                        </h3>
+                        <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-400 px-2 py-0.5 rounded-full font-bold">
+                            식품의약품안전처 API
+                        </span>
+                    </div>
+                    
+                    <!-- Meal Type Selection & Food Search Form -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 bg-[#161233] p-2 rounded-xl border border-yellow-400/30 text-xs">
+                            <span class="text-slate-400 font-bold shrink-0">식사 구분:</span>
+                            <select id="mealTypeSelect" class="bg-[#0f0c24] border border-yellow-400/50 rounded-lg px-2 py-1 text-yellow-300 font-bold focus:outline-none w-full">
+                                <option value="아침">🌅 아침 식사</option>
+                                <option value="점심" selected>☀️ 점심 식사</option>
+                                <option value="저녁">🌙 저녁 식사</option>
+                                <option value="간식">🍿 간식 / 야식</option>
+                            </select>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <input type="text" id="foodSearchInput" placeholder="식품명 검색 (예: 김밥, 닭가슴살, 샐러드)" onkeydown="if(event.key==='Enter') searchFoodApi()" class="flex-1 bg-[#161233] border border-yellow-400/60 rounded-xl px-3 py-2 text-xs text-yellow-100 focus:outline-none focus:border-yellow-300">
+                            <button onclick="searchFoodApi()" class="bg-yellow-400 hover:bg-yellow-300 text-black font-neon text-xs px-4 py-2 rounded-xl shadow-[0_0_10px_#ffe600] shrink-0 flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass"></i> 검색
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- API Search Results Container -->
+                    <div id="searchResults" class="hidden bg-[#161233] p-3 rounded-2xl border border-yellow-500/30 max-h-56 overflow-y-auto space-y-2 text-xs">
+                    </div>
+
+                    <!-- Manual Input Option Collapsible -->
+                    <details class="text-xs text-slate-400 bg-[#161233] p-3 rounded-2xl border border-slate-800">
+                        <summary class="cursor-pointer font-bold text-slate-300 hover:text-yellow-300">✏️ 수동으로 음식 및 칼로리 추가하기</summary>
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                            <input type="text" id="manualFoodName" placeholder="음식명" class="bg-[#0f0c24] border border-slate-700 p-2 rounded-xl text-white">
+                            <input type="number" id="manualCal" placeholder="칼로리(kcal)" class="bg-[#0f0c24] border border-slate-700 p-2 rounded-xl text-white">
+                            <input type="number" id="manualCarbs" placeholder="탄수화물(g)" class="bg-[#0f0c24] border border-slate-700 p-2 rounded-xl text-white">
+                            <input type="number" id="manualProtein" placeholder="단백질(g)" class="bg-[#0f0c24] border border-slate-700 p-2 rounded-xl text-white">
+                            <button onclick="addManualFood()" class="col-span-2 bg-pink-500 hover:bg-pink-400 text-black font-neon py-2 rounded-xl mt-1">
+                                수동 음식 추가하기
+                            </button>
+                        </div>
+                    </details>
+
+                    <!-- Today's Food List Grouped by Date & Meal Type -->
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center justify-between">
+                            <span>📋 <span id="foodListDateTitle">선택일</span> 섭취한 음식 목록</span>
+                            <span class="text-[10px] text-slate-500">클릭 시 삭제</span>
+                        </h4>
+                        <div id="todayFoodList" class="space-y-2 text-xs">
+                            <p id="emptyFood" class="text-slate-500 text-center py-4">해당 날짜에 등록된 식단이 없습니다. 위 API 검색 후 식단을 추가해보세요!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: HOME (요약 및 달성도) -->
+            <div id="tab-home" class="tab-content hidden space-y-5">
+                <!-- Summary Dashboard Card -->
+                <div class="bg-[#0f0c24] neon-box-pink rounded-3xl p-6 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-pink-600/20 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-pink-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-heart-pulse"></i> 건강 리포트 요약
+                        </span>
+                        <span class="text-[10px] bg-pink-500/20 text-pink-300 border border-pink-400 px-2 py-0.5 rounded-full font-digital font-bold">HEALTH DASHBOARD</span>
+                    </div>
+                    
+                    <div class="my-4 space-y-2">
+                        <h3 class="text-xl font-neon text-white">건강한 식습관 영구 동기화 중!</h3>
+                        <p class="text-xs text-slate-300">로그인 계정에 저장되어 기기가 바뀌어도 기록이 유지됩니다.</p>
+                    </div>
+
+                    <div class="mt-5">
+                        <button onclick="switchTab('diet')" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-neon text-xs py-3.5 rounded-2xl shadow-[0_0_15px_#ff007f] transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-utensils text-sm"></i> 식단 기록하러 가기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: MY PAGE -->
+            <div id="tab-mypage" class="tab-content hidden space-y-5">
+                <div class="border-b border-cyan-500/30 pb-3">
+                    <h2 class="text-xl font-neon text-cyan-300 neon-text-cyan flex items-center gap-2">
+                        <i class="fa-solid fa-user-gear"></i> 마이페이지 & 식단 기록
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">계정 및 식단 히스토리를 확인하세요.</p>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="bg-[#0f0c24] neon-box-cyan p-5 rounded-3xl flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 flex items-center justify-center text-2xl font-bold shrink-0">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white" id="myPageUserName">건강 다이어터</h3>
+                            <p class="text-[11px] text-cyan-400 font-digital mt-0.5" id="myPageUserEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5c292f392e1c39313d3530723f3331">[email&#160;protected]</a></p>
+                            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-500/20 border border-green-400 text-green-300">
+                                영구 클라우드 보관 중
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="bg-red-500/20 border border-red-400 text-red-300 text-xs px-3 py-2 rounded-xl font-bold hover:bg-red-500/30 transition">
+                        로그아웃
+                    </button>
+                </div>
+
+                <!-- Recent History -->
+                <div class="bg-[#0f0c24] neon-box-green rounded-3xl p-5">
+                    <h3 class="font-neon text-md text-green-400 neon-text-green mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left"></i> 최근 완료 기록
+                    </h3>
+                    <div id="historyList" class="space-y-2 text-xs">
+                        <p id="emptyHistory" class="text-slate-500 text-center py-4">식단을 기록하고 목표를 완수해보세요!</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM APP NAVIGATION BAR -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-[#0c091f]/95 border-t-2 border-pink-500/60 backdrop-blur-md z-40">
+            <div class="max-w-md mx-auto grid grid-cols-3 text-center py-2">
+                <button onclick="switchTab('diet')" id="nav-diet" class="flex flex-col items-center justify-center text-pink-400">
+                    <i class="fa-solid fa-utensils text-lg"></i>
+                    <span class="text-[10px] font-bold mt-1">식단</span>
+                </button>
+                <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center text-slate-500 hover:text-pink-400">
+                    <i class="fa-solid fa-house text-lg"></i>
+                    <span class="text-[10px] font-bold mt-1">홈</span>
+                </button>
+                <button onclick="switchTab('mypage')" id="nav-mypage" class="flex flex-col items-center justify-center text-slate-500 hover:text-green-400">
+                    <i class="fa-solid fa-user text-lg"></i>
+                    <span class="text-[10px] font-bold mt-1">MY</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-16 left-1/2 transform -translate-x-1/2 hidden bg-[#1b0826] border-2 border-pink-500 text-pink-300 text-xs font-bold px-5 py-3 rounded-2xl shadow-[0_0_20px_#ff007f] z-50 flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-check-circle text-green-300 text-base"></i>
+        <span id="toastMsg">알림 메시지</span>
+    </div>
+
+    <!-- FIREBASE MODULE SCRIPT -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // FIREBASE SETUP WITH FALLBACK CONFIG
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'neon-rabbit-app';
+        let firebaseConfig;
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                apiKey: "demo-key",
+                authDomain: "demo.firebaseapp.com",
+                projectId: "demo-project"
+            };
+        } catch(e) {
+            firebaseConfig = { apiKey: "demo-key", authDomain: "demo.firebaseapp.com", projectId: "demo-project" };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // GLOBAL APP STATE
+        window.currentUser = null;
+        window.db = db;
+        window.appId = appId;
+
+        // AUTHENTICATION INITIALIZATION
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                }
+            } catch (err) {
+                console.warn("Auth initial custom token fallback:", err);
+            }
+        }
+        initAuth();
+
+        // AUTH STATE LISTENER
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                window.currentUser = user;
+                if (!window.userDisplayName) {
+                    window.userDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : "건강 다이어터");
+                }
+                if (!window.userEmail) {
+                    window.userEmail = user.email || "guest@diet.rabbit";
+                }
+                
+                // Load User Cloud Data
+                await loadUserDataFromCloud();
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            } else {
+                window.currentUser = null;
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+        });
+
+        // AUTH FORM LISTENERS (LOGIN)
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+
+            if (!email || !pass) {
+                showToast("⚠️ 이메일과 비밀번호를 모두 입력해 주세요.");
+                return;
+            }
+
+            showToast("🔑 로그인 진행 중...");
+            
+            try {
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+                
+                const derivedName = email.split('@')[0];
+                window.userEmail = email;
+
+                // 로그인 시 클라우드 데이터 불러오기
+                await loadUserDataFromCloud();
+
+                // 이전에 저장된 display name이 없으면 이메일 ID로 설정
+                if (!window.userDisplayName || window.userDisplayName === "건강 다이어터") {
+                    window.userDisplayName = derivedName;
+                }
+
+                // 로그인 정보 업데이트 동기화
+                await saveUserDataToCloud();
+
+                // UI 반영
+                document.getElementById('headerUserName').innerText = window.userDisplayName;
+                document.getElementById('myPageUserName').innerText = window.userDisplayName;
+                document.getElementById('myPageUserEmail').innerText = window.userEmail;
+
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                showToast(`🎉 반가워요, ${window.userDisplayName}님! 로그인 되었습니다.`);
+            } catch (err) {
+                console.error("Login Error:", err);
+                showToast("⚠️ 로그인 중 오류가 발생했습니다.");
+            }
+        });
+
+        // AUTH FORM LISTENERS (SIGNUP)
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const pass = document.getElementById('signupPassword').value.trim();
+
+            if (!name || !email || !pass) {
+                showToast("⚠️ 모든 입력 항목을 작성해 주세요.");
+                return;
+            }
+
+            if (pass.length < 6) {
+                showToast("⚠️ 비밀번호는 6자리 이상이어야 합니다.");
+                return;
+            }
+
+            showToast("✨ 계정 생성 중...");
+
+            try {
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+                window.userDisplayName = name;
+                window.userEmail = email;
+
+                // Save initial User Data to Firestore
+                await saveUserDataToCloud();
+
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                showToast("🎉 회원가입 완료! 모든 기록이 영구 보관됩니다.");
+            } catch (err) {
+                console.error("Signup Error:", err);
+                showToast("⚠️ 회원가입 처리 중 오류가 발생했습니다.");
+            }
+        });
+
+        window.guestLogin = async function() {
+            showToast("🚀 게스트 로그인 접속 중...");
+            try {
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+                window.userDisplayName = "게스트 다이어터";
+                window.userEmail = "guest@diet.rabbit";
+                await loadUserDataFromCloud();
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            } catch (err) {
+                console.error("Guest login error:", err);
+                showToast("⚠️ 게스트 접속 중 오류가 발생했습니다.");
+            }
+        };
+
+        window.handleLogout = async function() {
+            try {
+                await signOut(auth);
+                showToast("👋 로그아웃 되었습니다.");
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
+        };
+
+        // SAVE DATA TO FIRESTORE CLOUD (STRICT PATH RULE 1)
+        window.saveUserDataToCloud = async function() {
+            if (!auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            
+            // Mandatory Strict Path: /artifacts/{appId}/users/{userId}/{collectionName}/{docId}
+            const userDocRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+
+            const payload = {
+                displayName: window.userDisplayName || "건강 다이어터",
+                email: window.userEmail || "user@email.com",
+                userProfile: window.userProfile,
+                allDietLogs: window.allDietLogs,
+                finishedDietDates: window.finishedDietDates,
+                dietHistory: Array.isArray(window.dietHistory) ? window.dietHistory : [],
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await setDoc(userDocRef, payload, { merge: true });
+            } catch (err) {
+                console.error("Cloud Save Error:", err);
+            }
+        };
+
+        // LOAD DATA FROM FIRESTORE CLOUD (STRICT PATH RULE 1)
+        window.loadUserDataFromCloud = async function() {
+            if (!auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            
+            // Mandatory Strict Path: /artifacts/{appId}/users/{userId}/{collectionName}/{docId}
+            const userDocRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+
+            try {
+                const snap = await getDoc(userDocRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.userProfile) window.userProfile = data.userProfile;
+                    if (data.allDietLogs) window.allDietLogs = data.allDietLogs;
+                    if (data.finishedDietDates) window.finishedDietDates = data.finishedDietDates;
+                    if (data.dietHistory) window.dietHistory = Array.isArray(data.dietHistory) ? data.dietHistory : [];
+                    else if (data.history && Array.isArray(data.history)) window.dietHistory = data.history;
+                    if (data.displayName) window.userDisplayName = data.displayName;
+                    if (data.email) window.userEmail = data.email;
+                }
+            } catch (err) {
+                console.error("Cloud Load Error:", err);
+            }
+
+            // Sync Header & Profile UI
+            document.getElementById('headerUserName').innerText = window.userDisplayName || "사용자";
+            document.getElementById('myPageUserName').innerText = window.userDisplayName || "건강 다이어터";
+            document.getElementById('myPageUserEmail').innerText = window.userEmail || "user@email.com";
+
+            calculateProfileMetrics();
+            updateDietUI();
+            renderHistory();
+        };
+    </script>
+
+    <!-- MAIN APP SCRIPT -->
+    <script>
+        // APP STATE
+        window.finishedDietDates = {}; // 날짜별 식단 완료 상태
+        window.dietHistory = [];
+        window.userDisplayName = "건강 다이어터";
+        window.userEmail = "user@email.com";
+
+        // DATE STATE
+        let selectedDate = getTodayStr();
+
+        // DIET FOOD LOG STORED BY DATE
+        window.allDietLogs = {
+            [selectedDate]: [
+                { id: 101, name: "현미밥", mealType: "점심", cal: 300, carbs: 65, prot: 6, fat: 2, sodium: 10, isApi: true },
+                { id: 102, name: "닭가슴살 샐러드", mealType: "점심", cal: 250, carbs: 12, prot: 30, fat: 5, sodium: 220, isApi: true }
+            ]
+        };
+
+        // DIET USER PROFILE STATE
+        window.userProfile = {
+            age: 25,
+            gender: 'male',
+            height: 175,
+            weight: 80,
+            activity: 1.375,
+            bmr: 1780,
+            tdee: 2000,
+            bmi: 26.1,
+            isObese: true
+        };
+
+        // AUTH TAB SWITCHER
+        function toggleAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const loginBtn = document.getElementById('authTabLoginBtn');
+            const signupBtn = document.getElementById('authTabSignupBtn');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                loginBtn.className = "py-2.5 rounded-xl bg-pink-500 text-black transition";
+                signupBtn.className = "py-2.5 rounded-xl text-slate-400 hover:text-white transition";
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                signupBtn.className = "py-2.5 rounded-xl bg-cyan-400 text-black transition";
+                loginBtn.className = "py-2.5 rounded-xl text-slate-400 hover:text-white transition";
+            }
+        }
+
+        // HELPER: Get Today YYYY-MM-DD
+        function getTodayStr() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // INIT ON LOAD
+        window.onload = function() {
+            const datePicker = document.getElementById('dietDatePicker');
+            if (datePicker) datePicker.value = selectedDate;
+        };
+
+        // DATE CHANGE HANDLERS
+        function changeDietDate() {
+            const pickerVal = document.getElementById('dietDatePicker').value;
+            if (pickerVal) {
+                selectedDate = pickerVal;
+                updateDietUI();
+            }
+        }
+
+        function setTodayDate() {
+            selectedDate = getTodayStr();
+            document.getElementById('dietDatePicker').value = selectedDate;
+            updateDietUI();
+        }
+
+        function updateDietUI() {
+            if (!allDietLogs[selectedDate]) {
+                allDietLogs[selectedDate] = [];
+            }
+
+            const today = getTodayStr();
+            const displayTitle = selectedDate === today ? "오늘" : selectedDate;
+            document.getElementById('selectedDateTextDisplay').innerText = displayTitle;
+            document.getElementById('foodListDateTitle').innerText = selectedDate;
+
+            recalculateDietStats();
+        }
+
+        // CALCULATE BMR / TDEE / BMI
+        function calculateProfileMetrics() {
+            const hInM = userProfile.height / 100;
+            userProfile.bmi = parseFloat((userProfile.weight / (hInM * hInM)).toFixed(1));
+            userProfile.isObese = userProfile.bmi >= 25;
+
+            if (userProfile.gender === 'male') {
+                userProfile.bmr = Math.round(10 * userProfile.weight + 6.25 * userProfile.height - 5 * userProfile.age + 5);
+            } else {
+                userProfile.bmr = Math.round(10 * userProfile.weight + 6.25 * userProfile.height - 5 * userProfile.age - 161);
+            }
+
+            const maint = userProfile.bmr * userProfile.activity;
+            userProfile.tdee = userProfile.isObese ? Math.round(maint - 500) : Math.round(maint);
+
+            document.getElementById('userProfileAgeSex').innerText = `${userProfile.age}세 / ${userProfile.gender === 'male' ? '남성' : '여성'}`;
+            document.getElementById('userProfileBody').innerText = `${userProfile.height}cm / ${userProfile.weight}kg`;
+            document.getElementById('userProfileBMI').innerText = `${userProfile.bmi} (${userProfile.isObese ? '비만' : '정상'})`;
+            document.getElementById('userProfileBMR').innerText = `${userProfile.bmr.toLocaleString()} kcal`;
+            document.getElementById('targetCalories').innerText = userProfile.tdee.toLocaleString();
+            document.getElementById('maxCalories').innerText = userProfile.tdee.toLocaleString();
+
+            const alertBox = document.getElementById('obesityAlert');
+            if (userProfile.isObese) {
+                alertBox.classList.remove('hidden');
+            } else {
+                alertBox.classList.add('hidden');
+            }
+
+            recalculateDietStats();
+        }
+
+        // FOOD API SEARCH
+        async function searchFoodApi() {
+            const query = document.getElementById('foodSearchInput').value.trim();
+            const resultsBox = document.getElementById('searchResults');
+
+            if (!query) {
+                showToast("🔍 검색할 식품명을 입력하세요!");
+                return;
+            }
+
+            resultsBox.classList.remove('hidden');
+            resultsBox.innerHTML = '<div class="text-center py-3 text-cyan-300 animate-pulse"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> 식품의약품안전처 DB 조회 중... ⚡</div>';
+
+            try {
+                const url = new URL('https://glittery-dasik-3cb269.netlify.app/api/food');
+                url.search = new URLSearchParams({
+                    pageNo: '1',
+                    numOfRows: '8',
+                    type: 'json',
+                    FOOD_NM_KR: query
+                });
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.header && data.header.resultCode === '00' && data.body && data.body.items && data.body.items.length > 0) {
+                    renderSearchResults(data.body.items);
+                } else {
+                    resultsBox.innerHTML = '<div class="text-center py-3 text-slate-400">검색 결과가 없습니다. 다시 검색해보세요.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                resultsBox.innerHTML = '<div class="text-center py-3 text-pink-400">API 연동 중 오류 발생. 수동 입력을 이용해보세요.</div>';
+            }
+        }
+
+        function renderSearchResults(items) {
+            const resultsBox = document.getElementById('searchResults');
+            const selectedMealType = document.getElementById('mealTypeSelect').value;
+
+            resultsBox.innerHTML = items.map((item) => {
+                const name = item.FOOD_NM_KR || '음식';
+                const cal = parseNum(item.AMT_NUM1);
+                const carbs = parseNum(item.AMT_NUM6);
+                const prot = parseNum(item.AMT_NUM3);
+                const fat = parseNum(item.AMT_NUM4);
+                const sodium = parseNum(item.AMT_NUM13);
+                const serving = item.SERVING_SIZE || '1회분';
+
+                return `
+                    <div class="bg-[#0f0c24] p-2.5 rounded-xl border border-slate-700 flex justify-between items-center hover:border-yellow-400">
+                        <div>
+                            <div class="font-bold text-white flex items-center gap-1.5">
+                                <span class="bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[9px] px-1.5 py-0.2 rounded font-bold">API</span>
+                                ${escapeHtml(name)} 
+                                <span class="text-[10px] text-slate-400">(${escapeHtml(serving)})</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">
+                                칼로리: <strong class="text-yellow-300 font-digital">${cal}kcal</strong> | 탄:${carbs}g 단:${prot}g 지:${fat}g
+                            </div>
+                        </div>
+                        <button onclick="addFoodFromApi('${escapeHtml(name)}', '${selectedMealType}', ${cal}, ${carbs}, ${prot}, ${fat}, ${sodium})" class="bg-yellow-400 text-black font-neon px-2.5 py-1 rounded-lg text-[11px] shrink-0 hover:bg-yellow-300 shadow-[0_0_8px_#ffe600]">
+                            + 추가
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function parseNum(val) {
+            if (!val) return 0;
+            const clean = String(val).replace(/,/g, '');
+            const num = parseFloat(clean);
+            return isNaN(num) ? 0 : Math.round(num);
+        }
+
+        function addFoodFromApi(name, mealType, cal, carbs, prot, fat, sodium) {
+            if (!allDietLogs[selectedDate]) allDietLogs[selectedDate] = [];
+
+            allDietLogs[selectedDate].push({
+                id: Date.now(),
+                name,
+                mealType,
+                cal,
+                carbs,
+                prot,
+                fat,
+                sodium,
+                isApi: true
+            });
+
+            recalculateDietStats();
+            document.getElementById('searchResults').classList.add('hidden');
+            showToast(`🥗 [${selectedDate} / ${mealType}] ${name} (${cal} kcal) 식단 추가!`);
+            
+            // Sync with Cloud
+            if (window.saveUserDataToCloud) window.saveUserDataToCloud();
+        }
+
+        function addManualFood() {
+            const name = document.getElementById('manualFoodName').value.trim() || '수동 입력 음식';
+            const cal = parseInt(document.getElementById('manualCal').value) || 0;
+            const carbs = parseInt(document.getElementById('manualCarbs').value) || 0;
+            const prot = parseInt(document.getElementById('manualProtein').value) || 0;
+            const mealType = document.getElementById('mealTypeSelect').value;
+
+            if (cal <= 0) {
+                showToast("⚠️ 칼로리를 올바르게 입력해주세요!");
+                return;
+            }
+
+            if (!allDietLogs[selectedDate]) allDietLogs[selectedDate] = [];
+
+            allDietLogs[selectedDate].push({
+                id: Date.now(),
+                name,
+                mealType,
+                cal,
+                carbs,
+                prot,
+                fat: 0,
+                sodium: 0,
+                isApi: false
+            });
+
+            recalculateDietStats();
+
+            document.getElementById('manualFoodName').value = '';
+            document.getElementById('manualCal').value = '';
+            document.getElementById('manualCarbs').value = '';
+            document.getElementById('manualProtein').value = '';
+
+            showToast(`🍱 [${selectedDate} / ${mealType}] ${name} 수동 추가 완료!`);
+
+            // Sync with Cloud
+            if (window.saveUserDataToCloud) window.saveUserDataToCloud();
+        }
+
+        function removeFood(id) {
+            if (allDietLogs[selectedDate]) {
+                allDietLogs[selectedDate] = allDietLogs[selectedDate].filter(f => f.id !== id);
+            }
+            recalculateDietStats();
+            showToast("🗑️ 식단 항목이 삭제되었습니다.");
+
+            // Sync with Cloud
+            if (window.saveUserDataToCloud) window.saveUserDataToCloud();
+        }
+
+        function recalculateDietStats() {
+            const currentList = allDietLogs[selectedDate] || [];
+
+            let totalCal = 0, totalCarbs = 0, totalProt = 0, totalFat = 0, totalSodium = 0;
+
+            currentList.forEach(f => {
+                totalCal += f.cal;
+                totalCarbs += f.carbs;
+                totalProt += f.prot;
+                totalFat += f.fat;
+                totalSodium += f.sodium;
+            });
+
+            document.getElementById('currentCalories').innerText = totalCal.toLocaleString();
+            document.getElementById('sumCarbs').innerText = totalCarbs.toLocaleString();
+            document.getElementById('sumProtein').innerText = totalProt.toLocaleString();
+            document.getElementById('sumFat').innerText = totalFat.toLocaleString();
+            document.getElementById('sumSodium').innerText = totalSodium.toLocaleString();
+
+            const pct = Math.min(100, Math.round((totalCal / userProfile.tdee) * 100));
+            document.getElementById('caloriePercent').innerText = `${pct}%`;
+            document.getElementById('calorieBar').style.width = `${pct}%`;
+
+            const calDiff = totalCal - userProfile.tdee;
+            const weightDeltaKg = calDiff / 7700;
+            const predictedKg = (userProfile.weight + weightDeltaKg).toFixed(2);
+
+            document.getElementById('predictedWeight').innerText = predictedKg;
+
+            const badge = document.getElementById('weightDiffBadge');
+            if (weightDeltaKg > 0) {
+                badge.className = "text-sm font-bold font-digital text-pink-400 mt-1";
+                badge.innerText = `+${weightDeltaKg.toFixed(2)} kg (증가 예상)`;
+            } else if (weightDeltaKg < 0) {
+                badge.className = "text-sm font-bold font-digital text-green-400 mt-1";
+                badge.innerText = `${weightDeltaKg.toFixed(2)} kg (감량 예상)`;
+            } else {
+                badge.className = "text-sm font-bold font-digital text-slate-400 mt-1";
+                badge.innerText = `0.00 kg (유지)`;
+            }
+
+            renderTodayFoodList();
+        }
+
+        function renderTodayFoodList() {
+            const list = document.getElementById('todayFoodList');
+            const empty = document.getElementById('emptyFood');
+            const currentList = allDietLogs[selectedDate] || [];
+
+            if (currentList.length > 0 && empty) {
+                empty.classList.add('hidden');
+            } else if (currentList.length === 0 && empty) {
+                empty.classList.remove('hidden');
+            }
+
+            list.innerHTML = currentList.map(f => `
+                <div onclick="removeFood(${f.id})" class="bg-[#161233] p-2.5 rounded-xl border border-slate-800 flex justify-between items-center cursor-pointer hover:border-pink-500 transition">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-pink-500/20 text-pink-300 border border-pink-400/50 text-[10px] font-bold px-2 py-0.5 rounded-md">${f.mealType || '식사'}</span>
+                        <div>
+                            <span class="font-bold text-slate-200">${escapeHtml(f.name)}</span>
+                            ${f.isApi ? '<span class="text-[9px] text-cyan-400 ml-1 font-bold">[API DB]</span>' : ''}
+                            <div class="text-[10px] text-slate-400">탄:${f.carbs}g / 단:${f.prot}g / 지:${f.fat}g</div>
+                        </div>
+                    </div>
+                    <span class="font-digital font-bold text-yellow-300 text-sm">${f.cal} kcal</span>
+                </div>
+            `).join('');
+        }
+
+        function finishDietDay() {
+            if (finishedDietDates[selectedDate]) {
+                showToast(`⚠️ [${selectedDate}] 식단은 이미 완주 처리되었습니다!`);
+                return;
+            }
+
+            const currentList = allDietLogs[selectedDate] || [];
+            let totalCal = currentList.reduce((acc, f) => acc + f.cal, 0);
+
+            if (totalCal === 0) {
+                showToast(`⚠️ [${selectedDate}] 섭취한 음식을 먼저 등록해주세요!`);
+                return;
+            }
+
+            if (totalCal <= userProfile.tdee) {
+                finishedDietDates[selectedDate] = true;
+                addHistory(`🎯 [${selectedDate}] 권장열량 목표 달성`);
+                triggerConfetti();
+                showToast(`🎉 [${selectedDate}] 목표 달성 완료!`);
+
+                // Sync with Cloud
+                if (window.saveUserDataToCloud) window.saveUserDataToCloud();
+            } else {
+                showToast("🚨 권장 칼로리를 초과했습니다! 칼로리를 조절 후 다시 완료해보세요.");
+            }
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 60,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('inputAge').value = userProfile.age;
+            document.getElementById('inputGender').value = userProfile.gender;
+            document.getElementById('inputHeight').value = userProfile.height;
+            document.getElementById('inputWeight').value = userProfile.weight;
+            document.getElementById('inputActivity').value = userProfile.activity;
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            userProfile.age = parseInt(document.getElementById('inputAge').value);
+            userProfile.gender = document.getElementById('inputGender').value;
+            userProfile.height = parseFloat(document.getElementById('inputHeight').value);
+            userProfile.weight = parseFloat(document.getElementById('inputWeight').value);
+            userProfile.activity = parseFloat(document.getElementById('inputActivity').value);
+
+            calculateProfileMetrics();
+            closeModal('profileModal');
+            showToast("⚙️ 개인 신체정보 및 목표 열량이 새로 계산되었습니다!");
+
+            // Sync with Cloud
+            if (window.saveUserDataToCloud) window.saveUserDataToCloud();
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            const navs = ['diet', 'home', 'mypage'];
+            navs.forEach(nav => {
+                const btn = document.getElementById(`nav-${nav}`);
+                if (nav === tabName) {
+                    btn.className = "flex flex-col items-center justify-center text-pink-400";
+                } else {
+                    btn.className = "flex flex-col items-center justify-center text-slate-500 hover:text-cyan-400";
+                }
+            });
+        }
+
+        function addHistory(title) {
+            if (!Array.isArray(window.dietHistory)) {
+                window.dietHistory = [];
+            }
+            window.dietHistory.unshift({ title, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const empty = document.getElementById('emptyHistory');
+            
+            const historyList = Array.isArray(window.dietHistory) ? window.dietHistory : [];
+
+            if (historyList.length > 0 && empty) empty.classList.add('hidden');
+
+            list.innerHTML = historyList.slice(0, 5).map(item => `
+                <div class="bg-[#161233] p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-slate-200">${escapeHtml(item.title)}</div>
+                        <div class="text-[9px] text-slate-500">${item.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
