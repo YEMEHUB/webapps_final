@@ -1,1 +1,1075 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알록달록 슈퍼파워 얌얌 키즈 식판 🍱</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Fonts: Jua & Gaegu -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'candy-red': '#FF6B6B',
+                        'candy-blue': '#4D96FF',
+                        'candy-green': '#6BCB77',
+                        'candy-yellow': '#FFD034',
+                        'candy-pink': '#FF8ACE',
+                        'candy-purple': '#9B5DE5',
+                        'bg-cream': '#FFFDF6'
+                    },
+                    fontFamily: {
+                        jua: ['Jua', 'sans-serif'],
+                        gaegu: ['Gaegu', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #FFFDF6;
+            background-image: 
+                radial-gradient(#FFE2E2 2px, transparent 2px), 
+                radial-gradient(#E2F0D9 2px, #FFFDF6 2px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Bounce & Pop Animations */
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+        .animate-hero { animation: heroFloat 3s infinite ease-in-out; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+            70% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 208, 52, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.9); }
+        }
+        .animate-super-glow { animation: pulseGlow 1.5s infinite ease-in-out; }
+
+        @keyframes monsterShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px) rotate(-6deg); }
+            40%, 80% { transform: translateX(12px) rotate(6deg); }
+        }
+        .animate-monster-hit { animation: monsterShake 0.4s ease-in-out; }
+
+        /* Custom Tray Slots Styling */
+        .tray-slot {
+            background: #FFFFFF;
+            box-shadow: inset 4px 4px 10px rgba(0,0,0,0.06), inset -4px -4px 10px rgba(255,255,255,0.9);
+            border: 4px dashed #CBD5E1;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .tray-slot.filled {
+            border-style: solid;
+            border-color: #4D96FF;
+            box-shadow: 0 10px 25px rgba(77, 150, 255, 0.25);
+            background: linear-gradient(135deg, #ffffff 0%, #F0F7FF 100%);
+        }
+
+        /* Custom Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Child Big Button Active Effect */
+        .btn-touch {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-touch:active {
+            transform: scale(0.92) !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between pb-8">
+
+    <!-- Top Kids Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-4 border-candy-yellow shadow-md px-3 sm:px-6 py-3">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            
+            <!-- Logo & Mascot Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('tray')">
+                <div class="w-12 h-12 bg-candy-yellow rounded-2xl flex items-center justify-center text-3xl shadow-md border-2 border-amber-300 animate-hero">
+                    🦖
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl text-slate-800 tracking-wide flex items-center gap-1.5">
+                        <span class="text-candy-red">알록</span><span class="text-candy-yellow">달록</span> <span class="text-candy-blue">슈퍼파워</span>
+                        <span class="bg-candy-pink text-white text-xs px-2.5 py-0.5 rounded-full shadow-sm">얌얌 키즈 🍱</span>
+                    </h1>
+                    <p class="text-xs font-gaegu text-slate-500 font-bold hidden sm:block">음식을 먹고 무적 슈퍼 히어로가 되어봐!</p>
+                </div>
+            </div>
+
+            <!-- Sound Controller & Tabs -->
+            <div class="flex items-center gap-2">
+                <!-- Sound Toggle Button -->
+                <button id="soundToggleBtn" onclick="toggleAudio()" class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border-2 border-amber-300 btn-touch shadow-sm">
+                    <span id="soundIcon" class="text-lg">🔊</span>
+                    <span id="soundText" class="hidden sm:inline">소리 ON</span>
+                </button>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border-2 border-slate-200 text-xs sm:text-sm">
+                    <button onclick="switchTab('tray')" id="tab-tray" class="nav-btn active-tab px-3 py-2 rounded-xl transition flex items-center gap-1 bg-white text-candy-blue shadow-sm border border-slate-200">
+                        <span>🍱</span> 식판 놀이
+                    </button>
+                    <button onclick="switchTab('monster')" id="tab-monster" class="nav-btn px-3 py-2 rounded-xl transition flex items-center gap-1 text-slate-600 hover:text-slate-900">
+                        <span>👾</span> 몬스터 잡기
+                    </button>
+                    <button onclick="switchTab('stickers')" id="tab-stickers" class="nav-btn px-3 py-2 rounded-xl transition flex items-center gap-1 text-slate-600 hover:text-slate-900">
+                        <span>⭐</span> 스티커 북
+                    </button>
+                </nav>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="max-w-5xl mx-auto px-3 sm:px-6 py-4 flex-grow w-full">
+
+        <!-- ================= TAB 1: INTERACTIVE SUPER MEAL TRAY ================= -->
+        <section id="section-tray" class="tab-content block space-y-5">
+            
+            <!-- Hero Heroine Banner & Speech Bubble -->
+            <div class="bg-gradient-to-r from-amber-100 via-pink-100 to-blue-100 p-4 sm:p-5 rounded-3xl border-4 border-amber-300 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 relative overflow-hidden">
+                
+                <!-- Mascot Animated Expression -->
+                <div class="flex items-center gap-4">
+                    <div id="mascotAvatar" class="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full border-4 border-candy-yellow shadow-lg flex items-center justify-center text-4xl sm:text-5xl animate-hero shrink-0">
+                        🦖
+                    </div>
+                    <div>
+                        <div class="inline-block bg-candy-yellow text-slate-800 text-xs px-3 py-0.5 rounded-full shadow-sm mb-1">
+                            영양 히어로 <span class="font-bold">"얌얌이"</span>
+                        </div>
+                        <div id="mascotBubble" class="bg-white px-4 py-2 rounded-2xl border-2 border-slate-200 text-slate-800 text-sm sm:text-base shadow-sm relative font-gaegu font-bold text-lg">
+                            "안녕! 아래 맛있는 음식을 눌러서 식판을 완성해줘!"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex gap-2 w-full sm:w-auto justify-end shrink-0">
+                    <button onclick="fillRandomMeal()" class="w-1/2 sm:w-auto bg-candy-purple hover:bg-purple-600 text-white px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm border-2 border-purple-400 shadow btn-touch flex items-center justify-center gap-1">
+                        <span>🎁</span> 추천 식판
+                    </button>
+                    <button onclick="resetTray()" class="w-1/2 sm:w-auto bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm border-2 border-slate-300 shadow-sm btn-touch flex items-center justify-center gap-1">
+                        <span>🔄</span> 비우기
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Tray & Food Selector Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                
+                <!-- Tray Board (7 Cols) -->
+                <div class="lg:col-span-7 bg-slate-200/90 p-4 sm:p-5 rounded-[2.5rem] border-8 border-slate-300 shadow-xl space-y-4">
+                    
+                    <div class="flex justify-between items-center px-1">
+                        <span class="text-base sm:text-lg text-slate-700 flex items-center gap-1.5">
+                            <span>✨</span> 5칸 슈퍼파워 식판
+                        </span>
+                        <span id="slotProgressText" class="bg-white px-3 py-1 rounded-full border-2 border-slate-300 text-xs text-slate-600">
+                            완성도: <b class="text-candy-red text-sm" id="slotCountNum">0</b> / 5
+                        </span>
+                    </div>
+
+                    <!-- 5 Compartments Layout -->
+                    <div class="grid grid-cols-6 gap-2.5 sm:gap-3">
+                        
+                        <!-- Slot 1: Carb -->
+                        <div onclick="removeFood('carb')" id="slot-carb" class="tray-slot col-span-2 aspect-square rounded-3xl p-2 flex flex-col items-center justify-center text-center cursor-pointer relative group btn-touch">
+                            <span class="absolute top-2 left-2 text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                                ⚡ 에너지 밥
+                            </span>
+                            <div id="slot-carb-inner" class="flex flex-col items-center justify-center mt-3">
+                                <span class="text-4xl opacity-30">🍚</span>
+                                <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">밥/국수</span>
+                            </div>
+                        </div>
+
+                        <!-- Slot 2: Protein -->
+                        <div onclick="removeFood('protein')" id="slot-protein" class="tray-slot col-span-2 aspect-square rounded-3xl p-2 flex flex-col items-center justify-center text-center cursor-pointer relative group btn-touch">
+                            <span class="absolute top-2 left-2 text-[10px] font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded-full">
+                                🦾 튼튼 근육
+                            </span>
+                            <div id="slot-protein-inner" class="flex flex-col items-center justify-center mt-3">
+                                <span class="text-4xl opacity-30">🍗</span>
+                                <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">고기/계란</span>
+                            </div>
+                        </div>
+
+                        <!-- Slot 3: Veggie 1 -->
+                        <div onclick="removeFood('veggie1')" id="slot-veggie1" class="tray-slot col-span-2 aspect-square rounded-3xl p-2 flex flex-col items-center justify-center text-center cursor-pointer relative group btn-touch">
+                            <span class="absolute top-2 left-2 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                🛡️ 무적 방패
+                            </span>
+                            <div id="slot-veggie1-inner" class="flex flex-col items-center justify-center mt-3">
+                                <span class="text-4xl opacity-30">🥦</span>
+                                <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">초록 채소</span>
+                            </div>
+                        </div>
+
+                        <!-- Slot 4: Veggie 2 -->
+                        <div onclick="removeFood('veggie2')" id="slot-veggie2" class="tray-slot col-span-3 h-28 sm:h-32 rounded-3xl p-2 flex flex-col items-center justify-center text-center cursor-pointer relative group btn-touch">
+                            <span class="absolute top-2 left-2 text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full">
+                                👁️ 탐정 채소
+                            </span>
+                            <div id="slot-veggie2-inner" class="flex flex-col items-center justify-center mt-3">
+                                <span class="text-4xl opacity-30">🥕</span>
+                                <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">알록달록 채소</span>
+                            </div>
+                        </div>
+
+                        <!-- Slot 5: Dairy/Fruit -->
+                        <div onclick="removeFood('soup')" id="slot-soup" class="tray-slot col-span-3 h-28 sm:h-32 rounded-3xl p-2 flex flex-col items-center justify-center text-center cursor-pointer relative group btn-touch">
+                            <span class="absolute top-2 left-2 text-[10px] font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full">
+                                🦴 키 쑥쑥 디저트
+                            </span>
+                            <div id="slot-soup-inner" class="flex flex-col items-center justify-center mt-3">
+                                <span class="text-4xl opacity-30">🥛</span>
+                                <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">우유/과일</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Live Superpower Gauges Dashboard -->
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-slate-300 space-y-2 shadow-sm">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-700 font-bold">💥 실시간 4대 슈퍼파워 에너자이저</span>
+                            <span id="totalScoreBadge" class="text-candy-purple text-sm font-bold">파워 점수: 0점</span>
+                        </div>
+
+                        <!-- 4 Mini Gauges Grid -->
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <!-- Power 1: Energy -->
+                            <div class="bg-amber-50 p-2 rounded-xl border border-amber-200 flex items-center gap-2">
+                                <span class="text-base">⚡</span>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between text-[11px] text-amber-900 font-bold">
+                                        <span>에너지</span>
+                                        <span id="val-carb">0%</span>
+                                    </div>
+                                    <div class="w-full bg-amber-200 h-2 rounded-full overflow-hidden mt-0.5">
+                                        <div id="bar-carb" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Power 2: Protein -->
+                            <div class="bg-red-50 p-2 rounded-xl border border-red-200 flex items-center gap-2">
+                                <span class="text-base">🦾</span>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between text-[11px] text-red-900 font-bold">
+                                        <span>근육</span>
+                                        <span id="val-protein">0%</span>
+                                    </div>
+                                    <div class="w-full bg-red-200 h-2 rounded-full overflow-hidden mt-0.5">
+                                        <div id="bar-protein" class="bg-red-500 h-full w-0 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Power 3: Immunity -->
+                            <div class="bg-emerald-50 p-2 rounded-xl border border-emerald-200 flex items-center gap-2">
+                                <span class="text-base">🛡️</span>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between text-[11px] text-emerald-900 font-bold">
+                                        <span>방패</span>
+                                        <span id="val-veggie1">0%</span>
+                                    </div>
+                                    <div class="w-full bg-emerald-200 h-2 rounded-full overflow-hidden mt-0.5">
+                                        <div id="bar-veggie1" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Power 4: Bones -->
+                            <div class="bg-blue-50 p-2 rounded-xl border border-blue-200 flex items-center gap-2">
+                                <span class="text-base">🦴</span>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between text-[11px] text-blue-900 font-bold">
+                                        <span>키 쑥쑥</span>
+                                        <span id="val-soup">0%</span>
+                                    </div>
+                                    <div class="w-full bg-blue-200 h-2 rounded-full overflow-hidden mt-0.5">
+                                        <div id="bar-soup" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Food Item Selector Menu (5 Cols) -->
+                <div class="lg:col-span-5 bg-white p-4 rounded-[2.5rem] border-4 border-slate-200 shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b-2 border-slate-100">
+                            <span class="text-base text-slate-800 flex items-center gap-1">
+                                🍕 음식 카드를 터치하세요!
+                            </span>
+                        </div>
+
+                        <!-- Category Filter Buttons -->
+                        <div class="flex gap-1.5 overflow-x-auto pb-2 no-scrollbar mb-3 text-xs">
+                            <button onclick="filterFoods('all')" id="btn-cat-all" class="cat-btn bg-candy-yellow text-slate-800 px-3 py-1.5 rounded-xl shrink-0 font-bold border border-amber-300">전체 🍽️</button>
+                            <button onclick="filterFoods('carb')" id="btn-cat-carb" class="cat-btn bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl shrink-0">🌾 에너지</button>
+                            <button onclick="filterFoods('protein')" id="btn-cat-protein" class="cat-btn bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl shrink-0">🥩 근육</button>
+                            <button onclick="filterFoods('veggie1')" id="btn-cat-veggie1" class="cat-btn bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl shrink-0">🥦 방패</button>
+                            <button onclick="filterFoods('soup')" id="btn-cat-soup" class="cat-btn bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl shrink-0">🥛 키쑥쑥</button>
+                        </div>
+
+                        <!-- Food Card Grid -->
+                        <div id="foodGrid" class="grid grid-cols-2 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Final Completion Button -->
+                    <div class="mt-4 pt-3 border-t-2 border-slate-100">
+                        <button onclick="checkHeroTransformation()" class="w-full bg-gradient-to-r from-candy-red via-candy-pink to-candy-purple hover:opacity-95 text-white text-lg py-3 rounded-2xl shadow-lg border-2 border-pink-300 btn-touch flex items-center justify-center gap-2">
+                            <span>👑</span> 슈퍼 히어로 변신하기!
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 2: MINI-GAME (MONSTER BATTLE) ================= -->
+        <section id="section-monster" class="tab-content hidden space-y-5">
+            
+            <div class="max-w-2xl mx-auto bg-gradient-to-b from-indigo-900 to-purple-900 p-6 sm:p-8 rounded-[2.5rem] border-4 border-indigo-400 shadow-2xl text-white text-center space-y-6 relative overflow-hidden">
+                
+                <!-- Game Header -->
+                <div class="flex justify-between items-center text-xs sm:text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
+                    <span class="text-candy-yellow">👾 편식 몬스터 퇴치 작전</span>
+                    <span class="text-pink-300">남은 시간: <b id="gameTimer" class="text-base text-white">20</b>초</span>
+                    <span class="text-emerald-300">퇴치 콤보: <b id="gameCombo" class="text-base text-white">0</b></span>
+                </div>
+
+                <!-- Monster Screen -->
+                <div class="py-4 space-y-3 relative">
+                    
+                    <!-- Monster Health Bar -->
+                    <div class="max-w-xs mx-auto bg-black/40 p-1 rounded-full border border-white/20">
+                        <div id="monsterHpBar" class="bg-gradient-to-r from-candy-red to-candy-yellow h-4 rounded-full transition-all duration-300 w-full"></div>
+                    </div>
+
+                    <!-- Monster Sprite Avatar -->
+                    <div id="monsterAvatar" class="text-7xl sm:text-8xl py-3 animate-hero inline-block transition-transform duration-200">
+                        👾
+                    </div>
+
+                    <!-- Monster Dialogue -->
+                    <h3 id="monsterName" class="text-2xl font-bold text-candy-yellow">
+                        편식 몬스터 "투덜이"
+                    </h3>
+                    <p id="monsterTaunt" class="text-base text-indigo-100 font-gaegu font-bold text-xl bg-white/10 inline-block px-4 py-1.5 rounded-full border border-white/10">
+                        "으하하! 초록 브로콜리는 맛없단 말야!"
+                    </p>
+
+                </div>
+
+                <!-- Attack Weapons / Food Laser Buttons -->
+                <div class="space-y-2">
+                    <p class="text-xs text-indigo-200">몬스터를 퇴치할 알맞은 슈퍼푸드 레이저를 누르세요!</p>
+                    <div id="weaponButtons" class="grid grid-cols-3 gap-2 sm:gap-3 text-slate-800 font-bold">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Start / Restart Overlay -->
+                <div id="gameStartOverlay" class="absolute inset-0 bg-indigo-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 space-y-4">
+                    <div class="text-6xl animate-hero">⚔️</div>
+                    <h3 class="text-2xl text-candy-yellow">편식 몬스터를 물리쳐라!</h3>
+                    <p class="text-sm text-indigo-200 max-w-sm font-gaegu text-lg leading-relaxed">
+                        편식 몬스터가 식탁을 어지럽히려 해요!<br>슈퍼 푸드 레이저를 쏘아 몬스터를 물리치고 칭찬 스티커를 받으세요!
+                    </p>
+                    <button onclick="startMonsterGame()" class="bg-candy-yellow hover:bg-amber-400 text-slate-900 text-lg px-8 py-3 rounded-2xl shadow-xl border-2 border-amber-200 btn-touch font-bold">
+                        🚀 게임 시작하기!
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 3: STICKER ALBUM & SOUND BOARD ================= -->
+        <section id="section-stickers" class="tab-content hidden space-y-5">
+            
+            <div class="bg-amber-50 p-5 sm:p-6 rounded-[2.5rem] border-4 border-amber-300 shadow-md space-y-5">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 border-b-2 border-amber-200 pb-3">
+                    <div>
+                        <h2 class="text-2xl text-amber-900 flex items-center gap-2">
+                            <span>⭐</span> 나의 무지개 칭찬 스티커 북
+                        </h2>
+                        <p class="text-xs text-amber-700 font-gaegu text-lg font-bold">
+                            스티커를 누르면 신나는 장난감 소리가 나요!
+                        </p>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-2xl border-2 border-amber-300 text-amber-900 text-sm font-bold shadow-sm">
+                        획득한 스티커: <span id="stickerCountBadge" class="text-candy-red text-base">0</span> / 9개
+                    </div>
+                </div>
+
+                <!-- 9 Grid Sticker Album -->
+                <div id="stickerGrid" class="grid grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <!-- Populated via JavaScript -->
+                </div>
+
+                <!-- Sticker Rank Info Box -->
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 text-center space-y-1">
+                    <span id="rankBadge" class="bg-candy-pink text-white text-xs px-3 py-1 rounded-full font-bold">현재 칭호</span>
+                    <h3 id="rankTitle" class="text-xl text-slate-800 font-gaegu font-bold text-2xl">
+                        🌱 무지개 편식 탐험가 단계!
+                    </h3>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal Dialog for Hero Transformation -->
+    <div id="heroModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-sm w-full border-4 border-candy-yellow shadow-2xl text-center space-y-4 animate-pop relative">
+            
+            <div class="text-7xl animate-hero my-2">
+                👑
+            </div>
+            <h2 class="text-2xl text-candy-red">무적 슈퍼 히어로 변신 성공!</h2>
+            <p id="heroModalMsg" class="text-slate-600 font-gaegu text-xl font-bold leading-snug">
+                "축하해요! 5가지 슈퍼파워를 모두 모아 무적 히어로가 되었어요!"
+            </p>
+
+            <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-xs text-amber-900 font-bold">
+                🎁 칭찬 스티커 1개를 선물로 받았어요!
+            </div>
+
+            <button onclick="closeHeroModal()" class="w-full bg-candy-blue hover:bg-blue-600 text-white text-lg py-3 rounded-2xl shadow-md border-2 border-blue-300 btn-touch">
+                오예! 신난다! 🎉
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Game Logic & Web Audio Synth Engine -->
+    <script>
+        /* ==========================================================================
+           1. FOOD ITEMS DATABASE & DATA STRUCTURES
+           ========================================================================== */
+        const FOOD_DATABASE = [
+            // Carb (에너지)
+            { id: 'rice1', category: 'carb', name: '알록달록 볶음밥', emoji: '🍚', powerName: '⚡ 쌩쌩 파워', voice: '우와! 쌩쌩 달릴 준비 완료!' },
+            { id: 'sweetpot', category: 'carb', name: '달콤 고구마', emoji: '🍠', powerName: '⚡ 쌩쌩 파워', voice: '달콤한 에너지 파워 뿜뿜!' },
+            { id: 'bread1', category: 'carb', name: '통밀 식빵', emoji: '🍞', powerName: '⚡ 쌩쌩 파워', voice: '빵빵한 힘이 샘솟아!' },
+            
+            // Protein (근육)
+            { id: 'meat1', category: 'protein', name: '튼튼 닭고기', emoji: '🍗', powerName: '🦾 튼튼 근육', voice: '오예! 공룡 근육 파워업!' },
+            { id: 'egg1', category: 'protein', name: '영양 파워 계란', emoji: '🥚', powerName: '🦾 튼튼 근육', voice: '탱글탱글 히어로 근육!' },
+            { id: 'fish1', category: 'protein', name: '스피드 생선구이', emoji: '🐟', powerName: '🦾 튼튼 근육', voice: '머리가 쌩쌩 좋아져!' },
+            { id: 'tofu1', category: 'protein', name: '말랑 두부', emoji: '🧊', powerName: '🦾 튼튼 근육', voice: '탄탄한 피부 파워!' },
+
+            // Veggie 1 (방패)
+            { id: 'broc1', category: 'veggie1', name: '공룡 브로콜리', emoji: '🥦', powerName: '🛡️ 무적 방패', voice: '무적 감기 바이러스 방패!' },
+            { id: 'spinach1', category: 'veggie1', name: '시금치 뽀빠이', emoji: '🥬', powerName: '🛡️ 무적 방패', voice: '뽀빠이 강철 방패 출동!' },
+
+            // Veggie 2 (탐정 채소)
+            { id: 'carrot1', category: 'veggie2', name: '매의눈 당근', emoji: '🥕', powerName: '👁️ 탐정 눈', voice: '밤에도 쌩쌩 잘 보이는 매의 눈!' },
+            { id: 'paprika1', category: 'veggie2', name: '보석 파프리카', emoji: '🫑', powerName: '👁️ 탐정 눈', voice: '알록달록 보석 파워 충전!' },
+            { id: 'tomato1', category: 'veggie2', name: '탱글 토마토', emoji: '🍅', powerName: '👁️ 비타민 눈', voice: '피부가 반짝반짝 빛나!' },
+
+            // Fruit / Dairy (키 쑥쑥)
+            { id: 'milk1', category: 'soup', name: '키 쑥쑥 우유', emoji: '🥛', powerName: '🦴 강철 뼈', voice: '뼈가 강철처럼 단단해져!' },
+            { id: 'cheese1', category: 'soup', name: '고소 치즈', emoji: '🧀', powerName: '🦴 강철 뼈', voice: '키가 쑥쑥 커지는 소리!' },
+            { id: 'banana1', category: 'soup', name: '에너지 바나나', emoji: '🍌', powerName: '🦴 비타민과일', voice: '미소 만점 바나나 파워!' },
+            { id: 'apple1', category: 'soup', name: '상큼 사과', emoji: '🍎', powerName: '🦴 비타민과일', voice: '상큼한 피로 싹 비타민!' }
+        ];
+
+        // Stickers Database
+        const STICKERS_DATA = [
+            { id: 's1', name: '브로콜리 공룡', emoji: '🦕', desc: '초록 나무 얌얌!', audioTone: 523.25 },
+            { id: 's2', name: '번개 당근', emoji: '🚀', desc: '매의 눈 탑재!', audioTone: 659.25 },
+            { id: 's3', name: '스피드 고등어', emoji: '🐟', desc: '쌩쌩 브레인!', audioTone: 783.99 },
+            { id: 's4', name: '근육 고기왕', emoji: '🥩', desc: '파워 불끈!', audioTone: 880.00 },
+            { id: 's5', name: '강철 우유 파워', emoji: '🥛', desc: '키 쑥쑥 대왕!', audioTone: 987.77 },
+            { id: 's6', name: '무적 식판 히어로', emoji: '👑', desc: '편식 퇴치 완료!', audioTone: 1046.50 },
+            { id: 's7', name: '보석 파프리카', emoji: '💎', desc: '반짝반짝 비타민!', audioTone: 1174.66 },
+            { id: 's8', name: '뽀빠이 시금치', emoji: '🛡️', desc: '바이러스 철벽!', audioTone: 1318.51 },
+            { id: 's9', name: '슈퍼 얌얌이', emoji: '🦖', desc: '최강 영양 챔피언!', audioTone: 1567.98 }
+        ];
+
+        // Current Tray State
+        let currentTray = {
+            carb: null,
+            protein: null,
+            veggie1: null,
+            veggie2: null,
+            soup: null
+        };
+
+        let activeCategory = 'all';
+        let isAudioOn = true;
+        let unlockedStickers = ['s1']; // s1 unlocked by default
+
+        /* ==========================================================================
+           2. WEB AUDIO API SYNTHESIZER (No External Sound Files Needed)
+           ========================================================================== */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            isAudioOn = !isAudioOn;
+            const icon = document.getElementById('soundIcon');
+            const txt = document.getElementById('soundText');
+            if (isAudioOn) {
+                icon.textContent = '🔊';
+                txt.textContent = '소리 ON';
+                playPopSound();
+            } else {
+                icon.textContent = '🔇';
+                txt.textContent = '소리 OFF';
+            }
+        }
+
+        // Pop sound when selecting food
+        function playPopSound() {
+            if (!isAudioOn) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // Remove item sound
+        function playRemoveSound() {
+            if (!isAudioOn) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.12);
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        // 8-Bit Victory Fanfare Tune
+        function playFanfareSound() {
+            if (!isAudioOn) return;
+            initAudio();
+
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.1 + 0.25);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(audioCtx.currentTime + index * 0.1);
+                osc.stop(audioCtx.currentTime + index * 0.1 + 0.25);
+            });
+        }
+
+        // Laser Sound for Monster Battle
+        function playLaserSound() {
+            if (!isAudioOn) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // Play Sticker Synth Chime
+        function playStickerTone(freq) {
+            if (!isAudioOn) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+
+        /* ==========================================================================
+           3. TRAY LOGIC & INTERACTION
+           ========================================================================== */
+        
+        // Render food items gallery
+        function renderFoodGrid() {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = '';
+
+            const itemsToDisplay = activeCategory === 'all' 
+                ? FOOD_DATABASE 
+                : FOOD_DATABASE.filter(f => f.category === activeCategory);
+
+            itemsToDisplay.forEach(food => {
+                const card = document.createElement('button');
+                card.className = `p-3 bg-slate-50 hover:bg-amber-50 rounded-2xl border-2 border-slate-200 hover:border-amber-400 shadow-sm flex flex-col items-center justify-center text-center transition btn-touch group`;
+                card.onclick = () => addFoodToTray(food);
+
+                card.innerHTML = `
+                    <span class="text-3xl sm:text-4xl group-hover:scale-110 transition-transform">${food.emoji}</span>
+                    <span class="text-xs font-bold text-slate-800 mt-1">${food.name}</span>
+                    <span class="text-[10px] text-slate-500 font-gaegu font-bold">${food.powerName}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Filter categories
+        function filterFoods(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = 'cat-btn bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl shrink-0 font-bold';
+            });
+            const activeBtn = document.getElementById(`btn-cat-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = 'cat-btn bg-candy-yellow text-slate-800 px-3 py-1.5 rounded-xl shrink-0 font-bold border border-amber-300';
+            }
+            renderFoodGrid();
+            playPopSound();
+        }
+
+        // Add food to appropriate slot
+        function addFoodToTray(food) {
+            playPopSound();
+            currentTray[food.category] = food;
+            updateSlotUI(food.category, food);
+            updateGaugesAndScore();
+
+            // Mascot Reaction
+            const mascotAvatar = document.getElementById('mascotAvatar');
+            const mascotBubble = document.getElementById('mascotBubble');
+            mascotAvatar.innerHTML = '🦖⚡';
+            mascotBubble.textContent = `"${food.voice}"`;
+
+            // Mascot bounce
+            mascotAvatar.classList.remove('animate-hero');
+            void mascotAvatar.offsetWidth;
+            mascotAvatar.classList.add('animate-hero');
+        }
+
+        // Remove food from slot
+        function removeFood(category) {
+            if (!currentTray[category]) return;
+            playRemoveSound();
+            currentTray[category] = null;
+            updateSlotUI(category, null);
+            updateGaugesAndScore();
+
+            document.getElementById('mascotBubble').textContent = '"음식을 빈 곳에 채워보자!"';
+        }
+
+        // Update single slot visual UI
+        function updateSlotUI(category, food) {
+            const slotEl = document.getElementById(`slot-${category}`);
+            const innerEl = document.getElementById(`slot-${category}-inner`);
+
+            if (food) {
+                slotEl.classList.add('filled');
+                innerEl.innerHTML = `
+                    <span class="text-4xl sm:text-5xl animate-pop">${food.emoji}</span>
+                    <span class="text-xs font-bold text-slate-800 mt-1">${food.name}</span>
+                `;
+            } else {
+                slotEl.classList.remove('filled');
+                const defaultIcons = { carb: '🍚', protein: '🍗', veggie1: '🥦', veggie2: '🥕', soup: '🥛' };
+                const defaultTitles = { carb: '밥/국수', protein: '고기/계란', veggie1: '초록 채소', veggie2: '알록달록 채소', soup: '우유/과일' };
+                
+                innerEl.innerHTML = `
+                    <span class="text-4xl opacity-30">${defaultIcons[category]}</span>
+                    <span class="text-xs text-slate-400 font-gaegu font-bold mt-1">${defaultTitles[category]}</span>
+                `;
+            }
+        }
+
+        // Reset full tray
+        function resetTray() {
+            playRemoveSound();
+            Object.keys(currentTray).forEach(cat => {
+                currentTray[cat] = null;
+                updateSlotUI(cat, null);
+            });
+            updateGaugesAndScore();
+            document.getElementById('mascotAvatar').innerHTML = '🦖';
+            document.getElementById('mascotBubble').textContent = '"식판이 비었어요! 맛있는 음식을 놓아줘!"';
+        }
+
+        // Fill random preset meal
+        function fillRandomMeal() {
+            playPopSound();
+            const categories = ['carb', 'protein', 'veggie1', 'veggie2', 'soup'];
+            categories.forEach(cat => {
+                const options = FOOD_DATABASE.filter(f => f.category === cat);
+                const randomChoice = options[Math.floor(Math.random() * options.length)];
+                currentTray[cat] = randomChoice;
+                updateSlotUI(cat, randomChoice);
+            });
+            updateGaugesAndScore();
+            document.getElementById('mascotAvatar').innerHTML = '🦖👑';
+            document.getElementById('mascotBubble').textContent = '"우와! 완벽한 영양 밸런스 무지개 식판 완성!"';
+        }
+
+        // Calculate live gauges and score
+        function updateGaugesAndScore() {
+            const categories = ['carb', 'protein', 'veggie1', 'veggie2', 'soup'];
+            let filledCount = 0;
+
+            categories.forEach(cat => {
+                const isFilled = !!currentTray[cat];
+                if (isFilled) filledCount++;
+
+                const barEl = document.getElementById(`bar-${cat}`);
+                const valEl = document.getElementById(`val-${cat}`);
+                if (barEl && valEl) {
+                    barEl.style.width = isFilled ? '100%' : '0%';
+                    valEl.textContent = isFilled ? '100%' : '0%';
+                }
+            });
+
+            document.getElementById('slotCountNum').textContent = filledCount;
+            const score = filledCount * 20;
+            document.getElementById('totalScoreBadge').textContent = `파워 점수: ${score}점`;
+
+            // Auto confetti trigger on 100%
+            if (filledCount === 5) {
+                confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
+            }
+        }
+
+        // Check & open Hero Transformation Modal
+        function checkHeroTransformation() {
+            const filledCount = Object.values(currentTray).filter(v => v !== null).length;
+            
+            if (filledCount < 5) {
+                initAudio();
+                playRemoveSound();
+                alert(`아직 ${5 - filledCount}개의 칸이 비어있어요! 5가지 음식을 모두 담아보세요! 🍱`);
+                return;
+            }
+
+            // Victory!
+            playFanfareSound();
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.5 }
+            });
+
+            // Unlock a sticker reward if not all unlocked
+            unlockRandomSticker();
+
+            document.getElementById('heroModal').classList.remove('hidden');
+        }
+
+        function closeHeroModal() {
+            playPopSound();
+            document.getElementById('heroModal').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           4. MINI-GAME: PICKY MONSTER BATTLE
+           ========================================================================== */
+        const MONSTERS = [
+            { name: '편식 몬스터 "투덜이"', avatar: '👾', taunt: '"으하하! 초록 브로콜리는 맛없단 말야!"', weakFood: '🥦' },
+            { name: '감기 균 "훌쩍이"', avatar: '🤧', taunt: '"당근의 비타민 방패 따위 무섭지 않아!"', weakFood: '🥕' },
+            { name: '약골 몬스터 "골골이"', avatar: '🥱', taunt: '"우유는 안 마실 거다! 키 안 클 거다!"', weakFood: '🥛' }
+        ];
+
+        let currentMonsterIndex = 0;
+        let monsterHp = 100;
+        let gameTimer = 20;
+        let gameCombo = 0;
+        let gameInterval = null;
+
+        function startMonsterGame() {
+            playPopSound();
+            document.getElementById('gameStartOverlay').classList.add('hidden');
+            monsterHp = 100;
+            gameTimer = 20;
+            gameCombo = 0;
+            currentMonsterIndex = Math.floor(Math.random() * MONSTERS.length);
+            
+            updateMonsterUI();
+            setupWeaponButtons();
+
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                gameTimer--;
+                document.getElementById('gameTimer').textContent = gameTimer;
+                if (gameTimer <= 0) {
+                    endMonsterGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateMonsterUI() {
+            const monster = MONSTERS[currentMonsterIndex];
+            document.getElementById('monsterAvatar').textContent = monster.avatar;
+            document.getElementById('monsterName').textContent = monster.name;
+            document.getElementById('monsterTaunt').textContent = monster.taunt;
+            document.getElementById('monsterHpBar').style.width = `${monsterHp}%`;
+            document.getElementById('gameCombo').textContent = gameCombo;
+        }
+
+        function setupWeaponButtons() {
+            const container = document.getElementById('weaponButtons');
+            container.innerHTML = '';
+            
+            const weapons = [
+                { emoji: '🥦', name: '브로콜리 빔', color: 'bg-emerald-300 border-emerald-400' },
+                { emoji: '🥕', name: '당근 펀치', color: 'bg-orange-300 border-orange-400' },
+                { emoji: '🥛', name: '우유 바주카', color: 'bg-blue-300 border-blue-400' }
+            ];
+
+            weapons.forEach(w => {
+                const btn = document.createElement('button');
+                btn.className = `${w.color} hover:opacity-90 text-slate-900 p-3 rounded-2xl border-2 flex flex-col items-center justify-center font-bold btn-touch shadow-md`;
+                btn.onclick = () => attackMonster(w.emoji);
+                btn.innerHTML = `
+                    <span class="text-3xl">${w.emoji}</span>
+                    <span class="text-xs mt-1 font-jua">${w.name}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function attackMonster(weaponEmoji) {
+            playLaserSound();
+            const monster = MONSTERS[currentMonsterIndex];
+            const avatar = document.getElementById('monsterAvatar');
+
+            // Hit animation
+            avatar.classList.remove('animate-monster-hit');
+            void avatar.offsetWidth;
+            avatar.classList.add('animate-monster-hit');
+
+            if (weaponEmoji === monster.weakFood) {
+                monsterHp -= 35; // Critical hit!
+                gameCombo++;
+            } else {
+                monsterHp -= 20;
+                gameCombo++;
+            }
+
+            if (monsterHp <= 0) {
+                monsterHp = 0;
+                endMonsterGame(true);
+            } else {
+                updateMonsterUI();
+            }
+        }
+
+        function endMonsterGame(isVictory) {
+            clearInterval(gameInterval);
+            
+            if (isVictory) {
+                playFanfareSound();
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.5 } });
+                unlockRandomSticker();
+                alert(`🎉 축하해요! 편식 몬스터를 물리치고 칭찬 스티커를 획득했어요!`);
+            } else {
+                playRemoveSound();
+                alert(`시간이 다 되었어요! 다시 도전해서 몬스터를 물리쳐봐요! 🔥`);
+            }
+
+            document.getElementById('gameStartOverlay').classList.remove('hidden');
+        }
+
+        /* ==========================================================================
+           5. STICKER ALBUM SYSTEM & LOCALSTORAGE
+           ========================================================================== */
+        
+        function loadSavedStickers() {
+            const saved = localStorage.getItem('yumyum_stickers');
+            if (saved) {
+                try {
+                    unlockedStickers = JSON.parse(saved);
+                } catch(e) {
+                    unlockedStickers = ['s1'];
+                }
+            }
+            renderStickers();
+        }
+
+        function saveStickers() {
+            localStorage.setItem('yumyum_stickers', JSON.stringify(unlockedStickers));
+        }
+
+        function unlockRandomSticker() {
+            const locked = STICKERS_DATA.filter(s => !unlockedStickers.includes(s.id));
+            if (locked.length > 0) {
+                const nextSticker = locked[0];
+                unlockedStickers.push(nextSticker.id);
+                saveStickers();
+                renderStickers();
+            }
+        }
+
+        function renderStickers() {
+            const grid = document.getElementById('stickerGrid');
+            grid.innerHTML = '';
+
+            document.getElementById('stickerCountBadge').textContent = unlockedStickers.length;
+
+            STICKERS_DATA.forEach(sticker => {
+                const isUnlocked = unlockedStickers.includes(sticker.id);
+                const card = document.createElement('div');
+                card.className = `aspect-square p-2.5 rounded-3xl border-4 flex flex-col items-center justify-center text-center cursor-pointer transition btn-touch relative ${
+                    isUnlocked 
+                    ? 'bg-white border-amber-300 shadow-md hover:scale-105' 
+                    : 'bg-slate-200 border-slate-300 opacity-50'
+                }`;
+
+                if (isUnlocked) {
+                    card.onclick = () => {
+                        playStickerTone(sticker.audioTone);
+                        card.classList.remove('animate-pop');
+                        void card.offsetWidth;
+                        card.classList.add('animate-pop');
+                    };
+                }
+
+                card.innerHTML = `
+                    <span class="text-4xl sm:text-5xl">${isUnlocked ? sticker.emoji : '🔒'}</span>
+                    <span class="text-xs font-bold text-slate-800 mt-1 font-jua">${isUnlocked ? sticker.name : '???'}</span>
+                    <span class="text-[10px] text-amber-700 font-gaegu font-bold">${isUnlocked ? sticker.desc : '미션으로 해제'}</span>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Update Hero Rank
+            const rankTitle = document.getElementById('rankTitle');
+            const count = unlockedStickers.length;
+            if (count >= 9) {
+                rankTitle.textContent = '👑 전설의 무적 히어로 무지개 챔피언!';
+            } else if (count >= 5) {
+                rankTitle.textContent = '⚡ 튼튼 영양 히어로 대장!';
+            } else {
+                rankTitle.textContent = '🌱 무지개 편식 탐험가 단계!';
+            }
+        }
+
+        /* ==========================================================================
+           6. TAB NAVIGATION LOGIC
+           ========================================================================== */
+        function switchTab(tabId) {
+            playPopSound();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn px-3 py-2 rounded-xl transition flex items-center gap-1 text-slate-600 hover:text-slate-900';
+            });
+
+            const targetSection = document.getElementById(`section-${tabId}`);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = 'nav-btn active-tab px-3 py-2 rounded-xl transition flex items-center gap-1 bg-white text-candy-blue shadow-sm border border-slate-200 font-bold';
+            }
+        }
+
+        /* ==========================================================================
+           7. INITIALIZATION ON PAGE LOAD
+           ========================================================================== */
+        window.onload = function() {
+            renderFoodGrid();
+            updateGaugesAndScore();
+            loadSavedStickers();
+        };
+    </script>
+</body>
+</html>
