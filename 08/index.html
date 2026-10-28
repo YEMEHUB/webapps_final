@@ -1,1 +1,750 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Growth Quest - 8-Bit Arcade Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 8-Bit Retro & Korean Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Galmuri11:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Galmuri11', 'Noto Sans KR', sans-serif;
+            background-color: #0f0f1b;
+            color: #f0f0f0;
+            background-image: 
+                linear-gradient(rgba(15, 15, 27, 0.95), rgba(15, 15, 27, 0.95)),
+                radial-gradient(#ff0055 1px, transparent 1px),
+                radial-gradient(#00f0ff 1px, #0f0f1b 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            background-position: 0 0, 0 0, 15px 15px;
+        }
+
+        .font-pixel {
+            font-family: 'Press Start 2P', 'Galmuri11', cursive;
+        }
+
+        /* 8-Bit Pixel Borders & Retro Arcade Boxes */
+        .arcade-box {
+            background: #181829;
+            border: 4px solid #ff0055;
+            box-shadow: 6px 6px 0px #00f0ff, inset -4px -4px 0px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
+
+        .arcade-box-yellow {
+            background: #1f1b0e;
+            border: 4px solid #ffe600;
+            box-shadow: 6px 6px 0px #ff6600, inset -4px -4px 0px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
+
+        .arcade-box-blue {
+            background: #0d1e2e;
+            border: 4px solid #00f0ff;
+            box-shadow: 6px 6px 0px #ff0055, inset -4px -4px 0px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
+
+        .arcade-btn {
+            background: linear-gradient(180deg, #ff0055 0%, #aa0033 100%);
+            color: #ffffff;
+            border: 3px solid #ffffff;
+            box-shadow: 4px 4px 0px #000000;
+            transition: all 0.1s ease;
+            text-shadow: 2px 2px 0px #000000;
+        }
+
+        .arcade-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #00f0ff;
+            background: linear-gradient(180deg, #ff2a75 0%, #cc0044 100%);
+        }
+
+        .arcade-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+
+        /* Scanline effect */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 99;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Pixel Blink Animation */
+        @keyframes pixelBlink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .blink {
+            animation: pixelBlink 1s infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f1b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff0055;
+            border: 2px solid #00f0ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+    <div class="scanline"></div>
+
+    <!-- Arcade Header -->
+    <header class="w-full border-b-4 border-pink-500 bg-black/80 py-4 px-6 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl animate-bounce">🕹️</span>
+                <span class="font-pixel text-pink-500 text-lg sm:text-xl tracking-wider uppercase text-shadow">
+                    MORNING GROWTH QUEST v1.0
+                </span>
+            </div>
+            <div class="flex items-center gap-2 font-pixel text-xs text-cyan-400">
+                <span class="bg-cyan-950 px-3 py-1 border-2 border-cyan-400 rounded flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 bg-emerald-400 rounded-full blink"></span> INSERT COIN
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 relative z-10">
+        
+        <!-- Hero Section -->
+        <section class="mb-6 text-center">
+            <div class="inline-block bg-pink-950 border-2 border-pink-500 px-4 py-1 text-pink-400 text-xs font-pixel mb-3">
+                👾 LEVEL UP YOUR MORNING ENERGY 👾
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-pixel text-yellow-300 leading-tight drop-shadow-[4px_4px_0_#ff0055]">
+                청소년 아침 결식 퇴치 <span class="text-cyan-400">퀘스트!</span>
+            </h1>
+            <p class="text-gray-300 text-xs sm:text-sm mt-3 max-w-lg mx-auto leading-relaxed">
+                나이, 키, 몸무게를 입력하고 아침 성장에 필요한 <strong class="text-pink-400">파워 3대 영양소 (칼로리·단백질·탄수화물)</strong>와 12가지 파워업 레시피를 해금하세요!
+            </p>
+        </section>
+
+        <!-- Developer Disclaimer Banner -->
+        <section class="mb-8 max-w-2xl mx-auto">
+            <div class="bg-yellow-950/80 border-2 border-yellow-400 p-4 rounded flex items-start gap-3 shadow-[4px_4px_0px_#000000]">
+                <span class="text-yellow-400 text-xl shrink-0">⚠️</span>
+                <div class="text-xs text-yellow-200 leading-relaxed">
+                    <strong class="font-pixel text-yellow-400 text-xs block mb-1">[개발자 가이드 & 유의사항]</strong>
+                    본 서비스에서 제공되는 영양 수치 및 식단 가이드는 청소년의 아침 식습관 개선을 돕기 위한 <strong>일반 참고용 표준 수치</strong>입니다. 개인의 특이 체질이나 건강 상태 관리가 필요한 경우 반드시 전문 의사 또는 영양사 선생님과 상의해 주세요!
+                </div>
+            </div>
+        </section>
+
+        <!-- Player Input Screen (Arcade Form) -->
+        <section class="arcade-box p-6 sm:p-8 mb-10 relative">
+            <div class="absolute -top-4 left-4 bg-pink-600 text-white px-3 py-1 font-pixel text-xs border-2 border-white shadow-[2px_2px_0px_#000000]">
+                PLAYER STATS INPUT
+            </div>
+
+            <form id="calcForm" onsubmit="calculateAndShow(event)">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 pt-2">
+                    <!-- 나이 -->
+                    <div>
+                        <label class="block text-xs font-pixel text-pink-400 mb-2">🎮 AGE (나이)</label>
+                        <input type="number" id="age" required min="10" max="19" value="15" onchange="playArcadeSound(400)"
+                            class="w-full px-3 py-2 bg-black border-2 border-pink-500 text-yellow-300 font-pixel text-xs focus:outline-none focus:border-cyan-400 text-center">
+                    </div>
+
+                    <!-- 현재 키 -->
+                    <div>
+                        <label class="block text-xs font-pixel text-cyan-400 mb-2">📏 HEIGHT (cm)</label>
+                        <input type="number" id="height" required min="100" max="220" step="0.1" value="162" onchange="playArcadeSound(400)"
+                            class="w-full px-3 py-2 bg-black border-2 border-cyan-500 text-yellow-300 font-pixel text-xs focus:outline-none focus:border-pink-400 text-center">
+                    </div>
+
+                    <!-- 목표 키 -->
+                    <div>
+                        <label class="block text-xs font-pixel text-yellow-400 mb-2">⭐ GOAL (cm)</label>
+                        <input type="number" id="targetHeight" required min="100" max="220" step="0.1" value="175" onchange="playArcadeSound(400)"
+                            class="w-full px-3 py-2 bg-black border-2 border-yellow-500 text-yellow-300 font-pixel text-xs focus:outline-none focus:border-cyan-400 text-center">
+                    </div>
+
+                    <!-- 몸무게 -->
+                    <div>
+                        <label class="block text-xs font-pixel text-emerald-400 mb-2">⚖️ WEIGHT (kg)</label>
+                        <input type="number" id="weight" required min="30" max="150" step="0.1" value="53" onchange="playArcadeSound(400)"
+                            class="w-full px-3 py-2 bg-black border-2 border-emerald-500 text-yellow-300 font-pixel text-xs focus:outline-none focus:border-pink-400 text-center">
+                    </div>
+                </div>
+
+                <!-- 운동량 -->
+                <div class="mb-6">
+                    <label class="block text-xs font-pixel text-purple-400 mb-2">🏃‍♂️ ACTIVITY LEVEL (활동량)</label>
+                    <select id="activity" onchange="playArcadeSound(400)" class="w-full px-3 py-3 bg-black border-2 border-purple-500 text-purple-300 font-pixel text-xs focus:outline-none focus:border-cyan-400">
+                        <option value="1.2">LV 1. LOW (주로 앉아서 공부)</option>
+                        <option value="1.4" selected>LV 2. MEDIUM (체육 수업 및 일반활동)</option>
+                        <option value="1.6">LV 3. HIGH (주 3~5회 액티브 운동)</option>
+                        <option value="1.8">LV 4. EXTREME (매일 고강도 퀘스트 진행)</option>
+                    </select>
+                </div>
+
+                <button type="submit" onclick="playSuccessSound()"
+                    class="arcade-btn w-full py-4 text-center font-pixel text-xs sm:text-sm tracking-wider cursor-pointer">
+                    ⚡ START RECIPE QUEST (식단 계산!) ⚡
+                </button>
+            </form>
+        </section>
+
+        <!-- Dynamic Output Section (기본적으로 노출되지 않음) -->
+        <div id="resultsContainer" class="hidden space-y-8">
+            
+            <!-- Growth Quest Alert Banner -->
+            <div id="growthAdviceCard" class="transition-all relative"></div>
+
+            <!-- Core Nutrients Stats Cards -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base sm:text-lg font-pixel text-pink-400 flex items-center gap-2">
+                        🍳 TODAY'S MORNING NUTRIENT GOALS
+                    </h2>
+                    <span class="text-xs font-pixel bg-pink-950 text-pink-300 px-3 py-1 border border-pink-500">25% OF DAILY GOAL</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- 칼로리 -->
+                    <div class="arcade-box-yellow p-5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-pixel text-yellow-400">CALORIES (에너지)</span>
+                            <span class="text-xl">⚡</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-pixel text-yellow-300 tracking-tight" id="targetCalories">0 kcal</div>
+                        <p class="text-xs text-gray-400 font-pixel mt-2">두뇌 에너지 충전!</p>
+                    </div>
+
+                    <!-- 단백질 -->
+                    <div class="arcade-box p-5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-pixel text-pink-400">PROTEIN (단백질)</span>
+                            <span class="text-xl">🥩</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-pixel text-pink-400 tracking-tight" id="targetProtein">0 g</div>
+                        <p class="text-xs text-gray-400 font-pixel mt-2">근육 & 키 성장 보너스!</p>
+                    </div>
+
+                    <!-- 탄수화물 -->
+                    <div class="arcade-box-blue p-5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-pixel text-cyan-400">CARBS (탄수화물)</span>
+                            <span class="text-xl">🍞</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-pixel text-cyan-300 tracking-tight" id="targetCarbs">0 g</div>
+                        <p class="text-xs text-gray-400 font-pixel mt-2">집중력 파워 업!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe List -->
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-pixel text-yellow-300">🎮 12 POWER-UP BREAKFAST ITEMS</h2>
+                        <p class="text-xs text-gray-400 mt-1">10분 안에 조리 가능한 12가지 파워 식단 아이템!</p>
+                    </div>
+
+                    <!-- Filter Tab Buttons -->
+                    <div class="flex items-center gap-2 font-pixel text-xs">
+                        <button onclick="filterRecipes('all', this)" class="recipe-tab active px-3 py-1.5 bg-pink-600 text-white border border-white">ALL</button>
+                        <button onclick="filterRecipes('high-protein', this)" class="recipe-tab px-3 py-1.5 bg-gray-900 text-gray-400 border border-gray-700 hover:text-white">HIGH PROTEIN</button>
+                        <button onclick="filterRecipes('quick', this)" class="recipe-tab px-3 py-1.5 bg-gray-900 text-gray-400 border border-gray-700 hover:text-white">5MIN QUICK</button>
+                    </div>
+                </div>
+
+                <!-- 12 Recipes Grid -->
+                <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Dynamic rendering upon submit -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t-4 border-pink-500 bg-black/90 py-6 text-center text-xs font-pixel text-gray-500 relative z-10">
+        <p class="mb-1">MORNING GROWTH QUEST • ARCADE EDITION</p>
+        <p class="text-[10px] text-gray-600">본 서비스는 건강 참고용으로 제작되었습니다.</p>
+    </footer>
+
+    <!-- Recipe Detail Modal -->
+    <div id="recipeModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="arcade-box max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto border-4 border-pink-500">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-pink-400 hover:text-pink-200 font-pixel text-sm bg-black px-2 py-1 border border-pink-500">
+                [X]
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 8-Bit Web Audio API Sound Synthesizer
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playArcadeSound(freq = 520, type = 'square', duration = 0.08) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function playSuccessSound() {
+            playArcadeSound(300, 'square', 0.06);
+            setTimeout(() => playArcadeSound(450, 'square', 0.06), 60);
+            setTimeout(() => playArcadeSound(600, 'triangle', 0.12), 120);
+        }
+
+        const recipes = [
+            {
+                id: 1,
+                name: "몽실 계란 샌드위치 & 베리",
+                category: "high-protein",
+                prepTime: "7분",
+                calories: 420,
+                protein: 22,
+                carbs: 48,
+                fat: 15,
+                image: "🍳",
+                type: "HIGH PROTEIN ITEM",
+                desc: "으깬 삶은 계란과 요거트로 부드럽게 만든 고단백 샌드위치!",
+                ingredients: ["통밀식빵 2장", "계란 2개", "플레인 요거트 1스푼", "블루베리 한 줌"],
+                steps: [
+                    "삶은 계란 2개를 그릇에 넣고 포크로 으깹니다.",
+                    "요거트와 후추를 넣고 잘 비벼줍니다.",
+                    "식빵 사이에 듬뿍 넣고 블루베리와 함께 섭취합니다."
+                ]
+            },
+            {
+                id: 2,
+                name: "바나나 퐁당 오트밀 볼",
+                category: "quick",
+                prepTime: "4분",
+                calories: 380,
+                protein: 15,
+                carbs: 62,
+                fat: 8,
+                image: "🥣",
+                type: "5MIN SPEED ITEM",
+                desc: "전자레인지 2분이면 완성되는 따뜻하고 든든한 바나나 오트밀.",
+                ingredients: ["오트밀 50g", "우유 200ml", "바나나 1개", "견과류 약간"],
+                steps: [
+                    "볼에 오트밀과 우유를 넣고 전자레인지에 2분간 데웁니다.",
+                    "슬라이스한 바나나와 견과류를 얹어 마무리합니다."
+                ]
+            },
+            {
+                id: 3,
+                name: "으랏차차 두부 닭가슴살 유부초밥",
+                category: "high-protein",
+                prepTime: "10분",
+                calories: 440,
+                protein: 30,
+                carbs: 45,
+                fat: 14,
+                image: "🍙",
+                type: "POWER BUFF ITEM",
+                desc: "밥 양을 줄이고 두부와 닭가슴살을 꽉 채운 30g 단백질 주먹밥!",
+                ingredients: ["유부피 6개", "두부 1/2모", "훈제 닭가슴살 50g", "참기름 약간"],
+                steps: [
+                    "두부 물기를 제거하고 으깬 닭가슴살과 섞습니다.",
+                    "참기름을 둘러 풍미를 더한 뒤 유부 속에 꼭꼭 채웁니다."
+                ]
+            },
+            {
+                id: 4,
+                name: "딸기 콕콕 그릭 요거트 볼",
+                category: "quick",
+                prepTime: "3분",
+                calories: 350,
+                protein: 18,
+                carbs: 42,
+                fat: 10,
+                image: "🍓",
+                type: "RECOVERY ITEM",
+                desc: "상큼한 과일과 유산균이 듬뿍 들어간 눈뜨자마자 먹는 모닝 요거트.",
+                ingredients: ["그릭요거트 150g", "그래놀라 30g", "딸기/사과", "꿀 약간"],
+                steps: [
+                    "그릇에 그릭요거트를 담아줍니다.",
+                    "그래놀라와 신선한 과일을 올리고 꿀을 소량 가미합니다."
+                ]
+            },
+            {
+                id: 5,
+                name: "고소한 치즈 스크램블 덮밥",
+                category: "high-protein",
+                prepTime: "8분",
+                calories: 490,
+                protein: 24,
+                carbs: 58,
+                fat: 18,
+                image: "🧀",
+                type: "ENERGY BOOST ITEM",
+                desc: "녹아내리는 치즈와 계란이 두뇌 회전 에너지를 가득 채워줍니다.",
+                ingredients: ["잡곡밥 2/3공기", "계란 2개", "슬라이스 치즈 1장", "간장 약간"],
+                steps: [
+                    "팬에 계란 2개와 치즈를 녹이며 부드럽게 스크램블합니다.",
+                    "따뜻한 밥 위에 얹고 간장을 살짝 둘러 비벼 먹습니다."
+                ]
+            },
+            {
+                id: 6,
+                name: "사과 싹둑 땅콩버터 토스트",
+                category: "quick",
+                prepTime: "3분",
+                calories: 390,
+                protein: 13,
+                carbs: 50,
+                fat: 16,
+                image: "🍎",
+                type: "BRAIN BUFF ITEM",
+                desc: "좋은 지방산과 사과의 아삭함이 시험 공부 머리를 틔워줍니다.",
+                ingredients: ["통밀식빵 1장", "땅콩버터 1.5스푼", "사과 1/2개"],
+                steps: [
+                    "구운 식빵에 땅콩버터를 균일하게 발라줍니다.",
+                    "얇게 썬 사과를 올려 함께 섭취합니다."
+                ]
+            },
+            {
+                id: 7,
+                name: "참치 쏙쏙 야채 비빔 컵밥",
+                category: "high-protein",
+                prepTime: "5분",
+                calories: 460,
+                protein: 26,
+                carbs: 55,
+                fat: 13,
+                image: "🍣",
+                type: "HIGH PROTEIN ITEM",
+                desc: "담백한 참치와 고소한 참기름이 어우러진 간편 컵밥.",
+                ingredients: ["잡곡 즉석밥 1팩", "기름 뺀 참치캔 1개", "김가루", "참기름"],
+                steps: [
+                    "데운 밥에 기름을 뺀 참치와 김가루를 얹습니다.",
+                    "참기름 한 스푼을 둘러 쓱쓱 비벼줍니다."
+                ]
+            },
+            {
+                id: 8,
+                name: "달콤 고구마 우유 & 삶은 달걀",
+                category: "quick",
+                prepTime: "4분",
+                calories: 410,
+                protein: 20,
+                carbs: 60,
+                fat: 9,
+                image: "🍠",
+                type: "SPEED ITEM",
+                desc: "등교 전 빠르게 갈아 마시고 삶은 달걀로 밸런스를 채웁니다.",
+                ingredients: ["찐고구마 1개", "우유 250ml", "삶은 달걀 1개"],
+                steps: [
+                    "믹서기에 고구마와 우유를 넣고 부드럽게 갈아줍니다.",
+                    "삶은 달걀과 함께 섭취합니다."
+                ]
+            },
+            {
+                id: 9,
+                name: "아보카도 톡 계란 토스트",
+                category: "high-protein",
+                prepTime: "8분",
+                calories: 430,
+                protein: 18,
+                carbs: 42,
+                fat: 21,
+                image: "🥑",
+                type: "BRAIN BUFF ITEM",
+                desc: "풍부한 불포화지방산으로 온종일 지치지 않는 집중력을 선사합니다.",
+                ingredients: ["통밀빵 1장", "아보카도 1/2개", "계란 후라이 1개"],
+                steps: [
+                    "빵 위에 으깬 아보카도와 소금 약간을 올립니다.",
+                    "노릇하게 구운 계란 후라이를 얹어 완성합니다."
+                ]
+            },
+            {
+                id: 10,
+                name: "쫄깃 훈제오리 또띠아 롤",
+                category: "high-protein",
+                prepTime: "9분",
+                calories: 470,
+                protein: 23,
+                carbs: 40,
+                fat: 22,
+                image: "🌯",
+                type: "POWER BUFF ITEM",
+                desc: "훈제오리의 좋은 단백질과 야채가 잘 어우러진 또띠아 롤.",
+                ingredients: ["또띠아 1장", "훈제오리 60g", "신선 야채 약간"],
+                steps: [
+                    "훈제오리를 노릇하게 구워 기름을 살짝 제거합니다.",
+                    "또띠아 위에 야채와 오리를 올리고 돌돌 말아줍니다."
+                ]
+            },
+            {
+                id: 11,
+                name: "블루베리 퐁당 프로틴 스무디",
+                category: "quick",
+                prepTime: "3분",
+                calories: 360,
+                protein: 25,
+                carbs: 52,
+                fat: 5,
+                image: "🥤",
+                type: "SPEED ITEM",
+                desc: "단백질 우유와 블루베리가 뇌와 눈 건강을 동시에 케어합니다.",
+                ingredients: ["단백질 우유 200ml", "냉동 블루베리 1컵", "바나나 1/2개"],
+                steps: [
+                    "모든 재료를 믹서기에 넣고 10초간 시원하게 갈아냅니다."
+                ]
+            },
+            {
+                id: 12,
+                name: "바삭 치즈 닭가슴살 퀘사디아",
+                category: "high-protein",
+                prepTime: "10분",
+                calories: 450,
+                protein: 32,
+                carbs: 38,
+                fat: 16,
+                image: "🌮",
+                type: "POWER BUFF ITEM",
+                desc: "고소한 치즈가 늘어나는 맛있는 고단백 퀘사디아.",
+                ingredients: ["또띠아 1장", "닭가슴살 70g", "모짜렐라 치즈 40g"],
+                steps: [
+                    "또띠아 반쪽에 닭가슴살과 치즈를 올리고 접어줍니다.",
+                    "팬에서 치즈가 녹을 때까지 바삭하게 구워냅니다."
+                ]
+            }
+        ];
+
+        function calculateAndShow(e) {
+            if (e) e.preventDefault();
+
+            const age = parseFloat(document.getElementById('age').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const targetHeight = parseFloat(document.getElementById('targetHeight').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const activity = parseFloat(document.getElementById('activity').value);
+
+            // BMR & TDEE (Mifflin-St Jeor)
+            const bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5; 
+            const tdee = bmr * activity;
+
+            // Morning Target: 25% of TDEE
+            const morningCalories = Math.round(tdee * 0.25);
+            const morningProtein = Math.round((morningCalories * 0.22) / 4);
+            const morningCarbs = Math.round((morningCalories * 0.53) / 4);
+
+            document.getElementById('targetCalories').innerText = `${morningCalories.toLocaleString()} kcal`;
+            document.getElementById('targetProtein').innerText = `${morningProtein} g`;
+            document.getElementById('targetCarbs').innerText = `${morningCarbs} g`;
+
+            const diff = targetHeight - height;
+            const adviceCard = document.getElementById('growthAdviceCard');
+
+            // 10cm 이상 차이일 경우 보스 비상 퀘스트 알림!
+            if (diff >= 10) {
+                adviceCard.className = "arcade-box p-6 bg-pink-950/90 border-4 border-pink-500 shadow-[6px_6px_0px_#ff0055]";
+                adviceCard.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <span class="text-3xl animate-bounce shrink-0">🚨</span>
+                        <div>
+                            <div class="bg-pink-600 text-white px-2.5 py-0.5 text-xs font-pixel inline-block mb-2 border border-white">
+                                BOSS LEVEL ALERT: POWER UP REQUIRED! 👾
+                            </div>
+                            <h3 class="font-pixel text-lg text-yellow-300">
+                                목표 키까지 무려 <span class="text-pink-400 font-extrabold underline">${diff.toFixed(1)}cm</span> 남았습니다!
+                            </h3>
+                            <p class="text-xs text-gray-300 font-pixel mt-2 leading-relaxed">
+                                청소년 성장기의 아침 결식은 성장판 에너지 공급을 저해합니다! <br/>
+                                <span class="text-cyan-300">오늘부터 아침 단백질 식단을 챙기고 성장의 파워업 퀘스트를 달성하세요!</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (diff > 0) {
+                adviceCard.className = "arcade-box-yellow p-6 border-4 border-yellow-400 shadow-[6px_6px_0px_#ff6600]";
+                adviceCard.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <span class="text-3xl shrink-0">⭐</span>
+                        <div>
+                            <div class="bg-yellow-500 text-black px-2.5 py-0.5 text-xs font-pixel inline-block mb-2 font-bold">
+                                STAGE CLEAR NEARBY! 🎮
+                            </div>
+                            <h3 class="font-pixel text-lg text-yellow-300">
+                                목표 키까지 단 ${diff.toFixed(1)}cm 남았습니다!
+                            </h3>
+                            <p class="text-xs text-gray-300 font-pixel mt-2 leading-relaxed">
+                                목표 달성이 멀지 않았습니다! 균형 잡힌 아침 영양소로 성장 속도를 올려보세요!
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                adviceCard.className = "arcade-box-blue p-6 border-4 border-cyan-400 shadow-[6px_6px_0px_#00f0ff]";
+                adviceCard.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <span class="text-3xl shrink-0">🏆</span>
+                        <div>
+                            <div class="bg-cyan-500 text-black px-2.5 py-0.5 text-xs font-pixel inline-block mb-2 font-bold">
+                                MISSION COMPLETED! 🏆
+                            </div>
+                            <h3 class="font-pixel text-lg text-cyan-300">
+                                이미 목표 키를 달성하셨습니다!
+                            </h3>
+                            <p class="text-xs text-gray-300 font-pixel mt-2 leading-relaxed">
+                                훌륭합니다! 학습 집중력과 건강 유지를 위해 규칙적인 아침 식사를 이어나가세요!
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderRecipes(recipes);
+            document.getElementById('resultsContainer').classList.remove('hidden');
+
+            // Scroll down to results smoothly
+            document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderRecipes(items) {
+            const grid = document.getElementById('recipeGrid');
+            grid.innerHTML = '';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "arcade-box p-5 hover:translate-y-[-4px] transition-all cursor-pointer flex flex-col justify-between group";
+                card.onclick = () => {
+                    playArcadeSound(650, 'square', 0.08);
+                    openModal(item.id);
+                };
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-3xl group-hover:scale-110 transition-transform">${item.image}</span>
+                            <span class="text-xs font-pixel text-cyan-400 bg-cyan-950 px-2 py-0.5 border border-cyan-500">
+                                ⏱️ ${item.prepTime}
+                            </span>
+                        </div>
+                        <div class="text-[10px] font-pixel text-pink-400 mb-1">${item.type}</div>
+                        <h3 class="font-pixel text-sm text-yellow-300 group-hover:text-cyan-300 transition">${item.name}</h3>
+                        <p class="text-gray-400 text-xs mt-2 leading-relaxed line-clamp-2">${item.desc}</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between font-pixel text-xs">
+                        <span class="text-yellow-400 font-bold">${item.calories} <span class="text-[9px] text-gray-500">kcal</span></span>
+                        <div class="flex gap-2 text-gray-400 text-[10px]">
+                            <span>P:<strong class="text-pink-400">${item.protein}g</strong></span>
+                            <span>C:<strong class="text-cyan-400">${item.carbs}g</strong></span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterRecipes(category, btnElement) {
+            playArcadeSound(500, 'square', 0.05);
+            const tabs = document.querySelectorAll('.recipe-tab');
+            tabs.forEach(t => {
+                t.className = "recipe-tab px-3 py-1.5 bg-gray-900 text-gray-400 border border-gray-700 hover:text-white";
+            });
+            btnElement.className = "recipe-tab active px-3 py-1.5 bg-pink-600 text-white border border-white";
+
+            if (category === 'all') {
+                renderRecipes(recipes);
+            } else {
+                renderRecipes(recipes.filter(r => r.category === category));
+            }
+        }
+
+        function openModal(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="flex items-center gap-3 mb-4 border-b border-gray-800 pb-3">
+                    <span class="text-4xl">${recipe.image}</span>
+                    <div>
+                        <span class="text-[10px] font-pixel text-pink-400 bg-pink-950 px-2 py-0.5 border border-pink-500">${recipe.type}</span>
+                        <h3 class="text-base font-pixel text-yellow-300 mt-1">${recipe.name}</h3>
+                        <span class="text-xs font-pixel text-gray-400">⏱️ PREP TIME: ${recipe.prepTime}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 p-3 bg-black border border-pink-500 mb-4 text-center font-pixel">
+                    <div>
+                        <div class="text-[9px] text-gray-400">ENERGY</div>
+                        <div class="text-xs text-yellow-300 font-bold">${recipe.calories}</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-gray-400">PROTEIN</div>
+                        <div class="text-xs text-pink-400 font-bold">${recipe.protein}g</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-gray-400">CARBS</div>
+                        <div class="text-xs text-cyan-300 font-bold">${recipe.carbs}g</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-gray-400">FAT</div>
+                        <div class="text-xs text-emerald-400 font-bold">${recipe.fat}g</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-xs font-pixel text-pink-400 uppercase mb-2">🛒 REQUIRED ITEMS (재료)</h4>
+                    <div class="flex flex-wrap gap-1.5 font-pixel">
+                        ${recipe.ingredients.map(ing => `<span class="bg-gray-900 border border-gray-700 text-gray-300 text-xs px-2.5 py-1 rounded">${ing}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-pixel text-pink-400 uppercase mb-2">📜 QUEST STEPS (조리 순서)</h4>
+                    <ol class="space-y-2 text-xs font-pixel text-gray-300">
+                        ${recipe.steps.map((step, idx) => `
+                            <li class="flex items-start gap-2 bg-black p-2.5 border border-gray-800">
+                                <span class="text-pink-500 font-bold shrink-0">${idx + 1}.</span>
+                                <span class="leading-relaxed">${step}</span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+            `;
+
+            document.getElementById('recipeModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playArcadeSound(300, 'square', 0.05);
+            document.getElementById('recipeModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
