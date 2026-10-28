@@ -1,1 +1,1174 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPlan - 학생 맞춤 스마트 다이어트 & 영양분석 시스템</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        t1: {
+                            red: '#E2012D',
+                            redhover: '#C20126',
+                            redglow: 'rgba(226, 1, 45, 0.15)',
+                            dark: '#0F1117',
+                            card: '#181C26',
+                            cardhover: '#202634',
+                            border: '#2A3040',
+                            text: '#F1F5F9',
+                            muted: '#94A3B8',
+                            gold: '#F59E0B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0F1117;
+            color: #F1F5F9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .t1-glow-red {
+            box-shadow: 0 4px 14px rgba(226, 1, 45, 0.2);
+        }
+        .btn-t1 {
+            background: #E2012D;
+            transition: all 0.2s ease;
+        }
+        .btn-t1:hover {
+            background: #C20126;
+            box-shadow: 0 4px 12px rgba(226, 1, 45, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-t1:active {
+            transform: translateY(0);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3040;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #E2012D;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-t1-red selection:text-white">
+
+    <!-- Toast Notification Message -->
+    <div id="toastMessage" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-t1-card border border-t1-red text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-t1-red"></i>
+        <span id="toastText" class="text-xs font-bold">알림 메시지</span>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-[#141822] border-b border-t1-border sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Brand Logo Header -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchSection('input')">
+                <svg class="w-9 h-9 text-t1-red" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.15"/>
+                    <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="6" stroke-linejoin="round"/>
+                    <path d="M35 45L45 55L65 35" stroke="#E2012D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-xl tracking-tight text-white">FitPlan</span>
+                        <span class="text-[10px] bg-t1-card text-t1-muted font-bold px-2 py-0.5 rounded border border-t1-border">STUDENT CARE</span>
+                    </div>
+                    <p class="text-[11px] text-t1-muted">학생 맞춤 스마트 헬스케어 & 영양 솔루션</p>
+                </div>
+            </div>
+
+            <!-- Navigation Bar & Auth State -->
+            <div class="flex items-center gap-3">
+                <nav id="topNav" class="hidden md:flex items-center gap-2">
+                    <button onclick="switchSection('dashboard')" id="nav-dashboard" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 btn-t1 text-white">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>피지컬 분석 리포트</span>
+                    </button>
+                    <button onclick="switchSection('food-search')" id="nav-food-search" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-t1-card border border-t1-border hover:border-t1-red text-t1-text">
+                        <i class="fa-solid fa-utensils text-t1-red"></i>
+                        <span>영양성분 검색</span>
+                    </button>
+                    <button onclick="switchSection('input')" id="nav-input" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-t1-muted hover:text-white hover:bg-t1-card" title="진단 정보 수정">
+                        <i class="fa-solid fa-sliders"></i>
+                    </button>
+                </nav>
+
+                <!-- Auth Buttons (Logged Out State) -->
+                <div id="authButtons" class="flex items-center gap-2">
+                    <button onclick="openAuthModal('login')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-t1-text bg-t1-card border border-t1-border hover:border-t1-red transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-to-bracket text-t1-red"></i>
+                        <span>로그인</span>
+                    </button>
+                    <button onclick="openAuthModal('signup')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white btn-t1 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>회원가입</span>
+                    </button>
+                </div>
+
+                <!-- Logged In User Pill -->
+                <div id="userInfoPill" class="hidden flex items-center gap-2.5 bg-t1-card border border-t1-border px-3.5 py-1.5 rounded-xl">
+                    <div class="w-6 h-6 rounded-full bg-t1-red/20 text-t1-red flex items-center justify-center font-bold text-xs">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span id="userDisplayName" class="text-xs font-bold text-white leading-tight">학생</span>
+                        <span id="userDisplayEmail" class="text-[9px] text-t1-muted leading-none">로그인됨</span>
+                    </div>
+                    <button onclick="logoutUser()" title="로그아웃" class="text-t1-muted hover:text-t1-red text-xs ml-1 transition">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+
+        <!-- SECTION 1: DETAILED STUDENT ASSESSMENT FORM -->
+        <section id="sec-input" class="max-w-2xl mx-auto transition-all">
+            <div class="bg-t1-card border border-t1-border rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+
+                <!-- Brand Logo Banner Inside Form -->
+                <div class="flex flex-col items-center justify-center mb-6 text-center">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-8 h-8 text-t1-red" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.15"/>
+                            <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="6" stroke-linejoin="round"/>
+                            <path d="M35 45L45 55L65 35" stroke="#E2012D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="text-xl font-extrabold text-white">FitPlan</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">학생 맞춤 정밀 피지컬 진단</h1>
+                    <p class="text-t1-muted text-xs mt-1">상세한 생활습관 및 신체 정보를 입력하면 과학적인 다이어트 가이드를 제공합니다.</p>
+                </div>
+
+                <form id="studentForm" onsubmit="handleUserSubmit(event)" class="space-y-6">
+                    
+                    <!-- 1. 기본 인적사항 -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-t1-red uppercase tracking-wider flex items-center gap-1.5 border-b border-t1-border pb-1">
+                            <i class="fa-solid fa-id-card"></i> 1. 기본 프로필 정보
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">이름</label>
+                                <input type="text" id="userName" required placeholder="홍길동" 
+                                    class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">생년월일</label>
+                                <input type="date" id="birthDate" required 
+                                    class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">성별</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gender" value="male" checked class="peer hidden">
+                                        <div class="py-2 text-center text-xs font-semibold bg-t1-dark border border-t1-border rounded-xl peer-checked:border-t1-red peer-checked:bg-t1-red/10 peer-checked:text-t1-red transition">
+                                            남학생
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gender" value="female" class="peer hidden">
+                                        <div class="py-2 text-center text-xs font-semibold bg-t1-dark border border-t1-border rounded-xl peer-checked:border-t1-red peer-checked:bg-t1-red/10 peer-checked:text-t1-red transition">
+                                            여학생
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">키 (cm)</label>
+                                <input type="number" id="height" step="0.1" min="120" max="220" required placeholder="175" 
+                                    class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">몸무게 (kg)</label>
+                                <input type="number" id="weight" step="0.1" min="30" max="200" required placeholder="68" 
+                                    class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 세부 활동 및 학업 데이터 -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-t1-red uppercase tracking-wider flex items-center gap-1.5 border-b border-t1-border pb-1">
+                            <i class="fa-solid fa-graduation-cap"></i> 2. 학생 학업 및 생활 패턴
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">하루 착석 시간 (수업/독서실)</label>
+                                <select id="sitHours" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="4">4시간 미만</option>
+                                    <option value="7" selected>4시간 ~ 8시간</option>
+                                    <option value="10">8시간 ~ 11시간</option>
+                                    <option value="12">12시간 이상 (고3/수험생)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">등하교 이동 방식 & 보행시간</label>
+                                <select id="commuteType" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="minimal">차량/대중교통 이용 (도보 15분 미만)</option>
+                                    <option value="moderate" selected>도보 등하교 (하루 30분 내외 보행)</option>
+                                    <option value="active">도보/자전거 등하교 (하루 1시간 이상)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">주간 격렬한 운동 횟수 (체육/스포츠)</label>
+                                <select id="exerciseFreq" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="0">주 0회 (거의 하지 않음)</option>
+                                    <option value="2" selected>주 1~2회 (학교 체육시간 등)</option>
+                                    <option value="4">주 3~4회 (방과후 스포츠/헬스)</option>
+                                    <option value="6">주 5회 이상 (체대입시/선수)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">평균 수면 시간</label>
+                                <select id="sleepHours" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="5">5시간 이하 (수면 부족)</option>
+                                    <option value="7" selected>6 ~ 7시간 (보통)</option>
+                                    <option value="8">8시간 이상 (충분)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 다이어트 목표 및 식습관 -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-t1-red uppercase tracking-wider flex items-center gap-1.5 border-b border-t1-border pb-1">
+                            <i class="fa-solid fa-bullseye"></i> 3. 감량 목표 & 식습관 선호
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">다이어트 주 목표</label>
+                                <select id="dietGoal" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="fat_loss" selected>체지방 감량 & 체중 조절</option>
+                                    <option value="maintenance">현재 체중 유지 & 영양 균형</option>
+                                    <option value="muscle">체력 증진 & 근육량 증가</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-t1-muted mb-1.5">야식 및 간식 섭취 빈도</label>
+                                <select id="snackFreq" class="w-full bg-t1-dark border border-t1-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                                    <option value="rare">주 1회 미만 (거의 먹지 않음)</option>
+                                    <option value="sometimes" selected>주 2~3회 (가끔 매점/야식)</option>
+                                    <option value="often">주 4회 이상 (자주 섭취)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl text-sm font-bold text-white btn-t1 mt-2 flex items-center justify-center gap-2">
+                        <span>정밀 맞춤 리포트 생성하기</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DASHBOARD & REPORT -->
+        <section id="sec-dashboard" class="hidden space-y-6">
+            
+            <!-- Alert Banner Container -->
+            <div id="alertBanner"></div>
+
+            <!-- Top Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                
+                <div class="bg-t1-card border border-t1-border rounded-xl p-4">
+                    <div class="text-t1-muted text-[11px] font-bold uppercase">체지방률 (추정치)</div>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span id="statFatRate" class="text-2xl font-extrabold text-white">0.0</span>
+                        <span class="text-t1-red font-bold text-sm">%</span>
+                    </div>
+                    <div class="text-[11px] text-t1-muted mt-1" id="statFatStatus">계산 중...</div>
+                </div>
+
+                <div class="bg-t1-card border border-t1-border rounded-xl p-4">
+                    <div class="text-t1-muted text-[11px] font-bold uppercase">BMI 지수</div>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="statBMI" class="text-2xl font-extrabold text-white">0.0</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-t1-dark text-t1-muted font-bold" id="statBMIBadge">보통</span>
+                    </div>
+                    <div class="text-[11px] text-t1-muted mt-1" id="statBMIDesc">표준 범위</div>
+                </div>
+
+                <div class="bg-t1-card border border-t1-border rounded-xl p-4">
+                    <div class="text-t1-muted text-[11px] font-bold uppercase">권장 섭취 칼로리</div>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span id="statTargetCal" class="text-2xl font-extrabold text-t1-gold">0</span>
+                        <span class="text-[11px] font-bold text-t1-muted">kcal</span>
+                    </div>
+                    <div class="text-[11px] text-t1-muted mt-1" id="statBmrInfo">BMR: 0 kcal</div>
+                </div>
+
+                <div class="bg-t1-card border border-t1-border rounded-xl p-4">
+                    <div class="text-t1-muted text-[11px] font-bold uppercase">오늘 섭취 칼로리</div>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span id="statConsumedCal" class="text-2xl font-extrabold text-t1-red">0</span>
+                        <span class="text-[11px] font-bold text-t1-muted">/ <span id="statTargetCalSub">0</span></span>
+                    </div>
+                    <div class="w-full bg-t1-dark h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div id="statCalProgress" class="bg-t1-red h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-t1-card border border-t1-border rounded-xl p-4">
+                    <div class="text-t1-muted text-[11px] font-bold uppercase">권장 하루 수분</div>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span id="statWater" class="text-2xl font-extrabold text-blue-400">2.1</span>
+                        <span class="text-[11px] font-bold text-t1-muted">L</span>
+                    </div>
+                    <div class="text-[11px] text-t1-muted mt-1">학업 집중력 유지 수분</div>
+                </div>
+            </div>
+
+            <!-- Detailed Analysis Card -->
+            <div class="bg-t1-card border border-t1-border rounded-2xl p-5">
+                <div class="flex items-center justify-between border-b border-t1-border pb-3 mb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-t1-red" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.2"/>
+                            <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="8"/>
+                        </svg>
+                        <span>FitPlan 정밀 섭취 & 활동 진단 분석</span>
+                    </h3>
+                    <span id="analysisGoalTag" class="text-[10px] bg-t1-dark text-t1-gold border border-t1-border px-2.5 py-1 rounded-full font-semibold">체지방 감량 모드</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs" id="detailAnalysisBox">
+                </div>
+            </div>
+
+            <!-- Main Content 2 Columns -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left Column: Diet & Workouts -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Diet Plan Card -->
+                    <div class="bg-t1-card border border-t1-border rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-utensils text-t1-red"></i>
+                                <span>맞춤 학생 식단 가이드</span>
+                            </h2>
+                            <span class="text-xs bg-t1-dark text-t1-muted px-2.5 py-1 rounded-full border border-t1-border">성장 & 학습 밸런스</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="dietPlanContainer">
+                        </div>
+                    </div>
+
+                    <!-- Workout Quest Card -->
+                    <div class="bg-t1-card border border-t1-border rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-person-running text-t1-red"></i>
+                                <span>데일리 헬스 & 교정 루틴</span>
+                            </h2>
+                            <span class="text-xs bg-t1-red/10 text-t1-red font-semibold px-2.5 py-1 rounded-full border border-t1-red/30">DAILY GOAL</span>
+                        </div>
+                        <div class="space-y-3" id="workoutQuestContainer">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Today's Intake List -->
+                <div class="space-y-6">
+
+                    <div class="bg-t1-card border border-t1-border rounded-2xl p-6 flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-t1-gold"></i>
+                                <span>오늘의 식단 기록</span>
+                            </h2>
+                            <button onclick="switchSection('food-search')" class="text-xs bg-t1-red hover:bg-t1-redhover text-white font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>영양 검색</span>
+                            </button>
+                        </div>
+
+                        <!-- Intake Items List -->
+                        <div id="intakeList" class="space-y-3 flex-1 overflow-y-auto max-h-[360px] pr-1">
+                            <div class="text-center py-12 text-t1-muted text-xs">
+                                <i class="fa-solid fa-bowl-food text-3xl mb-2 text-t1-border block"></i>
+                                아직 기록된 음식이 없습니다.<br>검색을 통해 먹은 음식을 추가해 보세요.
+                            </div>
+                        </div>
+
+                        <!-- Total Nutrient Summary -->
+                        <div class="mt-4 pt-4 border-t border-t1-border space-y-2 text-xs">
+                            <div class="flex justify-between text-t1-muted font-semibold">
+                                <span>총 탄수화물</span>
+                                <span id="totalCarb" class="text-white">0 g</span>
+                            </div>
+                            <div class="flex justify-between text-t1-muted font-semibold">
+                                <span>총 단백질</span>
+                                <span id="totalProtein" class="text-white">0 g</span>
+                            </div>
+                            <div class="flex justify-between text-t1-muted font-semibold">
+                                <span>총 지방</span>
+                                <span id="totalFat" class="text-white">0 g</span>
+                            </div>
+                            <div class="flex justify-between text-t1-muted font-semibold">
+                                <span>총 나트륨</span>
+                                <span id="totalSodium" class="text-t1-red">0 mg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 3: FOOD SEARCH API -->
+        <section id="sec-food-search" class="hidden space-y-6">
+            <div class="bg-t1-card border border-t1-border rounded-2xl p-6 sm:p-8">
+
+                <!-- Brand Logo Top Search -->
+                <div class="max-w-2xl mx-auto text-center mb-6">
+                    <div class="inline-flex items-center gap-2 justify-center mb-1">
+                        <svg class="w-6 h-6 text-t1-red" viewBox="0 0 100 100" fill="none">
+                            <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.2"/>
+                            <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="8"/>
+                        </svg>
+                        <span class="text-xs font-bold text-t1-red uppercase tracking-widest">FOOD & NUTRITION DATABASE</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">식품 영양성분 실시간 검색</h2>
+                    <p class="text-t1-muted text-xs mt-1">섭취한 음식의 칼로리와 탄·단·지 영양성분을 검색하여 등록하세요.</p>
+                </div>
+
+                <!-- Search Form -->
+                <form onsubmit="searchFoodAPI(event)" class="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-t1-muted text-sm"></i>
+                        <input type="text" id="foodKeyword" required placeholder="식품명 검색 (예: 김밥, 떡볶이, 닭가슴살, 바나나)" 
+                            class="w-full bg-t1-dark border border-t1-border rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-t1-muted focus:outline-none focus:border-t1-red transition">
+                    </div>
+                    <button type="submit" class="py-3 px-6 rounded-xl font-bold text-sm text-white btn-t1 whitespace-nowrap flex items-center justify-center gap-2">
+                        <span>검색</span>
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </button>
+                </form>
+
+                <!-- Status Loader -->
+                <div id="searchStatus" class="text-center py-6 hidden">
+                    <div class="inline-block animate-spin text-t1-red text-2xl mb-2">
+                        <i class="fa-solid fa-circle-notch"></i>
+                    </div>
+                    <p class="text-t1-muted text-xs font-medium">영양성분 데이터베이스 조회 중...</p>
+                </div>
+
+                <!-- Search Results Grid -->
+                <div id="foodResultGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                    <div class="col-span-full text-center py-12 text-t1-muted text-xs">
+                        <i class="fa-solid fa-magnifying-glass text-4xl mb-3 text-t1-border block"></i>
+                        검색어를 입력하고 검색 버튼을 눌러주세요.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- AUTH MODAL (LOGIN & SIGNUP) -->
+    <div id="authModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-t1-card border border-t1-border rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
+            <button onclick="closeAuthModal()" class="absolute right-4 top-4 text-t1-muted hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Logo Header -->
+            <div class="flex flex-col items-center justify-center text-center mb-6">
+                <svg class="w-10 h-10 text-t1-red mb-2" viewBox="0 0 100 100" fill="none">
+                    <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.15"/>
+                    <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="6"/>
+                    <path d="M35 45L45 55L65 35" stroke="#E2012D" stroke-width="7" stroke-linecap="round"/>
+                </svg>
+                <h2 id="authModalTitle" class="text-xl font-bold text-white">FitPlan 로그인</h2>
+                <p id="authModalSub" class="text-xs text-t1-muted mt-1">학생 맞춤 건강 관리 서비스를 이용해보세요.</p>
+            </div>
+
+            <!-- Login / Signup Form -->
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-t1-muted mb-1">아이디 / 이메일 주소</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-3 text-t1-muted text-xs"></i>
+                        <input type="text" id="authUserId" required placeholder="student123 또는 example@school.com" 
+                            class="w-full bg-t1-dark border border-t1-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-t1-muted mb-1">비밀번호</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3 text-t1-muted text-xs"></i>
+                        <input type="password" id="authPassword" required placeholder="••••••••" 
+                            class="w-full bg-t1-dark border border-t1-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                    </div>
+                </div>
+
+                <div id="signupOnlyFields" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-t1-muted mb-1">학생 이름</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-id-badge absolute left-3.5 top-3 text-t1-muted text-xs"></i>
+                            <input type="text" id="authName" placeholder="홍길동" 
+                                class="w-full bg-t1-dark border border-t1-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-t1-red transition">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl font-bold text-sm text-white btn-t1 mt-2 flex items-center justify-center gap-2">
+                    <span>로그인하기</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <div class="mt-5 pt-4 border-t border-t1-border/60 text-center">
+                <span id="authSwitchText" class="text-xs text-t1-muted">계정이 없으신가요?</span>
+                <button onclick="toggleAuthMode()" id="authSwitchBtn" class="text-xs font-bold text-t1-red hover:underline ml-1">
+                    회원가입하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#12141A] border-t border-t1-border py-6 text-center text-xs text-t1-muted">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-t1-red" viewBox="0 0 100 100" fill="none">
+                    <rect width="100" height="100" rx="20" fill="#E2012D" fill-opacity="0.2"/>
+                    <path d="M20 30L50 15L80 30V45C80 65 50 85 50 85C50 85 20 65 20 45V30Z" stroke="#E2012D" stroke-width="8"/>
+                </svg>
+                <span class="text-white font-bold">FitPlan</span>
+                <span>| Student Smart Health Care</span>
+            </div>
+            <div>
+                데이터 출처: 식품의약품안전처 식품영양성분DB
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Global State & User Data
+        let currentUser = null;
+        let todayIntake = [];
+        let authMode = 'login'; // 'login' or 'signup'
+        
+        // Mock User Storage (In-memory + Session Storage fallback)
+        let registeredUsers = JSON.parse(sessionStorage.getItem('fitplan_users') || '{}');
+
+        // Init Default Date & Load Saved Session
+        window.onload = function() {
+            const defaultDate = new Date();
+            defaultDate.setFullYear(defaultDate.getFullYear() - 16);
+            document.getElementById('birthDate').value = defaultDate.toISOString().split('T')[0];
+
+            // Restore active session if present
+            const savedSession = sessionStorage.getItem('fitplan_active_user');
+            if (savedSession) {
+                try {
+                    currentUser = JSON.parse(savedSession);
+                    loginUser(currentUser.name, currentUser.uid);
+                    if (currentUser.bmi) {
+                        renderDashboard();
+                        switchSection('dashboard');
+                    }
+                } catch(e) {
+                    console.error("Session restore failed", e);
+                }
+            }
+        };
+
+        // Custom Toast Alert
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastMessage');
+            const toastText = document.getElementById('toastText');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastText.innerText = message;
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-t1-red';
+            } else if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info text-t1-gold';
+            }
+
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 3000);
+        }
+
+        // Section Switcher
+        function switchSection(secId) {
+            if (!currentUser && secId !== 'input') {
+                showToast('먼저 정밀 피지컬 진단을 진행하거나 로그인해 주세요!', 'error');
+                openAuthModal('login');
+                return;
+            }
+
+            ['input', 'dashboard', 'food-search'].forEach(id => {
+                const el = document.getElementById(`sec-${id}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            document.getElementById(`sec-${secId}`).classList.remove('hidden');
+
+            const nav = document.getElementById('topNav');
+            if (currentUser) {
+                nav.classList.remove('hidden');
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Auth Modal Controls
+        function openAuthModal(mode) {
+            authMode = mode;
+            const modal = document.getElementById('authModal');
+            const title = document.getElementById('authModalTitle');
+            const sub = document.getElementById('authModalSub');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const signupFields = document.getElementById('signupOnlyFields');
+            const switchText = document.getElementById('authSwitchText');
+            const switchBtn = document.getElementById('authSwitchBtn');
+
+            if (mode === 'login') {
+                title.innerText = 'FitPlan 로그인';
+                sub.innerText = '등록된 계정으로 로그인하여 헬스 리포트를 확인하세요.';
+                submitBtn.innerHTML = `<span>로그인하기</span><i class="fa-solid fa-right-to-bracket text-xs"></i>`;
+                signupFields.classList.add('hidden');
+                switchText.innerText = '계정이 없으신가요?';
+                switchBtn.innerText = '회원가입하기';
+            } else {
+                title.innerText = '학생 회원가입';
+                sub.innerText = 'FitPlan에 가입하고 개인 맞춤 영양 관리를 시작하세요.';
+                submitBtn.innerHTML = `<span>가입 완료하기</span><i class="fa-solid fa-user-plus text-xs"></i>`;
+                signupFields.classList.remove('hidden');
+                switchText.innerText = '이미 계정이 있으신가요?';
+                switchBtn.innerText = '로그인하기';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            openAuthModal(authMode === 'login' ? 'signup' : 'login');
+        }
+
+        // Handle Login & Signup Submission
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const uid = document.getElementById('authUserId').value.trim().toLowerCase();
+            const pass = document.getElementById('authPassword').value.trim();
+
+            if (!uid || !pass) {
+                showToast('아이디와 비밀번호를 모두 입력해 주세요.', 'error');
+                return;
+            }
+
+            if (authMode === 'signup') {
+                const name = document.getElementById('authName').value.trim() || '학생';
+                
+                if (registeredUsers[uid]) {
+                    showToast('이미 존재하는 아이디 또는 이메일입니다.', 'error');
+                    return;
+                }
+
+                registeredUsers[uid] = { uid, pass, name };
+                sessionStorage.setItem('fitplan_users', JSON.stringify(registeredUsers));
+
+                showToast(`회원가입 완료! 반가워요, ${name}님.`, 'success');
+                loginUser(name, uid);
+            } else {
+                // Login Mode
+                if (registeredUsers[uid] && registeredUsers[uid].pass === pass) {
+                    const user = registeredUsers[uid];
+                    showToast(`로그인 성공! 환영합니다, ${user.name}님.`, 'success');
+                    loginUser(user.name, uid);
+                } else if (uid === 'admin' || uid === 'student') {
+                    // Demo fallback
+                    loginUser(uid === 'admin' ? '관리자학생' : '김학생', uid);
+                    showToast('체험 계정으로 로그인되었습니다.', 'success');
+                } else {
+                    showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
+                }
+            }
+        }
+
+        function loginUser(name, uid) {
+            closeAuthModal();
+
+            if (!currentUser) {
+                currentUser = { name, uid };
+            } else {
+                currentUser.name = name;
+                currentUser.uid = uid;
+            }
+
+            sessionStorage.setItem('fitplan_active_user', JSON.stringify(currentUser));
+
+            document.getElementById('authButtons').classList.add('hidden');
+            document.getElementById('userInfoPill').classList.remove('hidden');
+            document.getElementById('userDisplayName').innerText = name;
+            document.getElementById('userDisplayEmail').innerText = uid;
+            document.getElementById('userName').value = name;
+            document.getElementById('topNav').classList.remove('hidden');
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            sessionStorage.removeItem('fitplan_active_user');
+            
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('userInfoPill').classList.add('hidden');
+            document.getElementById('topNav').classList.add('hidden');
+            
+            showToast('로그아웃 되었습니다.', 'info');
+            switchSection('input');
+        }
+
+        // User Physical Submit & Advanced Calculations
+        function handleUserSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('userName').value.trim();
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const birthDateStr = document.getElementById('birthDate').value;
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            
+            // Detailed Question Inputs
+            const sitHours = parseInt(document.getElementById('sitHours').value);
+            const commuteType = document.getElementById('commuteType').value;
+            const exerciseFreq = parseInt(document.getElementById('exerciseFreq').value);
+            const sleepHours = parseInt(document.getElementById('sleepHours').value);
+            const dietGoal = document.getElementById('dietGoal').value;
+            const snackFreq = document.getElementById('snackFreq').value;
+
+            // Age Calculation
+            const birthDate = new Date(birthDateStr);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            // BMI Calculation
+            const bmi = parseFloat((weight / ((height / 100) ** 2)).toFixed(1));
+
+            // Estimated Fat Rate Formula
+            const genderFactor = (gender === 'male') ? 1 : 0;
+            let fatRate = (1.20 * bmi) + (0.23 * age) - (10.8 * genderFactor) - 5.4;
+            fatRate = parseFloat(Math.max(4, Math.min(55, fatRate)).toFixed(1));
+
+            // Overfat Rule (Male > 20%, Female > 28%)
+            const isOverFat = (gender === 'male' && fatRate > 20) || (gender === 'female' && fatRate > 28);
+
+            // BMR (Mifflin-St Jeor)
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
+            bmr = Math.round(bmr);
+
+            // Fine Activity Multiplier Calculation
+            let activityMultiplier = 1.2;
+            if (commuteType === 'moderate') activityMultiplier += 0.08;
+            if (commuteType === 'active') activityMultiplier += 0.15;
+            if (exerciseFreq === 2) activityMultiplier += 0.1;
+            if (exerciseFreq === 4) activityMultiplier += 0.2;
+            if (exerciseFreq >= 5) activityMultiplier += 0.3;
+
+            let tdee = bmr * activityMultiplier;
+
+            // Goal Calorie Calculation
+            let targetCalorie = tdee;
+            if (dietGoal === 'fat_loss') targetCalorie -= 350;
+            if (dietGoal === 'muscle') targetCalorie += 250;
+            
+            if (isOverFat && dietGoal !== 'muscle') targetCalorie = Math.min(targetCalorie, tdee - 400);
+            targetCalorie = Math.max(1450, Math.round(targetCalorie));
+
+            // Recommended Water Intake (L)
+            const recommendedWater = (weight * 0.033).toFixed(1);
+
+            currentUser = {
+                ...(currentUser || {}),
+                name,
+                gender,
+                age,
+                height,
+                weight,
+                bmi,
+                fatRate,
+                isOverFat,
+                bmr,
+                tdee,
+                targetCalorie,
+                recommendedWater,
+                sitHours,
+                commuteType,
+                exerciseFreq,
+                sleepHours,
+                dietGoal,
+                snackFreq
+            };
+
+            sessionStorage.setItem('fitplan_active_user', JSON.stringify(currentUser));
+            if (!currentUser.uid) {
+                loginUser(name, 'guest_' + Date.now().toString().slice(-4));
+            }
+
+            renderDashboard();
+            switchSection('dashboard');
+            showToast('맞춤 피지컬 리포트가 생성되었습니다!', 'success');
+        }
+
+        // Render Dashboard & Reports
+        function renderDashboard() {
+            if (!currentUser) return;
+
+            // Banner Notice
+            const alertBanner = document.getElementById('alertBanner');
+            if (currentUser.isOverFat) {
+                alertBanner.innerHTML = `
+                    <div class="bg-t1-card border border-t1-red/50 rounded-2xl p-5 text-center relative overflow-hidden shadow-lg">
+                        <div class="text-base sm:text-lg font-bold text-t1-red flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>⚠️ 체지방률 관리가 필요한 구간입니다</span>
+                        </div>
+                        <p class="text-xs text-t1-muted font-medium mt-1">
+                            체지방률 ${currentUser.fatRate}% (${currentUser.gender === 'male' ? '남학생 권장 20%' : '여학생 권장 28%'} 초과) - 알맞은 식단 조절과 일일 운동을 추천합니다.
+                        </p>
+                    </div>
+                `;
+            } else {
+                alertBanner.innerHTML = `
+                    <div class="bg-t1-card border border-emerald-500/30 rounded-2xl p-4 text-center">
+                        <div class="text-sm font-bold text-emerald-400 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>체지방률이 상쾌하고 건강한 적정 범위 내에 있습니다.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Stats Update
+            document.getElementById('statFatRate').innerText = currentUser.fatRate;
+            document.getElementById('statFatStatus').innerText = currentUser.isOverFat ? '⚠️ 관리가 필요한 상태' : '✅ 적정 체지방 범위';
+            
+            document.getElementById('statBMI').innerText = currentUser.bmi;
+            let bmiStatus = '표준';
+            if (currentUser.bmi < 18.5) bmiStatus = '저체중';
+            else if (currentUser.bmi >= 23 && currentUser.bmi < 25) bmiStatus = '과체중 위험';
+            else if (currentUser.bmi >= 25) bmiStatus = '비만';
+            document.getElementById('statBMIBadge').innerText = bmiStatus;
+
+            document.getElementById('statTargetCal').innerText = currentUser.targetCalorie.toLocaleString();
+            document.getElementById('statTargetCalSub').innerText = currentUser.targetCalorie.toLocaleString();
+            document.getElementById('statBmrInfo').innerText = `기초대사량: ${currentUser.bmr} kcal`;
+            document.getElementById('statWater').innerText = currentUser.recommendedWater;
+
+            // Render Fine Analysis Section
+            const analysisBox = document.getElementById('detailAnalysisBox');
+            let goalTag = "체지방 감량 모드";
+            if (currentUser.dietGoal === 'maintenance') goalTag = "체중 유지 & 영양 균형";
+            if (currentUser.dietGoal === 'muscle') goalTag = "근육량 증가 모드";
+            document.getElementById('analysisGoalTag').innerText = goalTag;
+
+            analysisBox.innerHTML = `
+                <div class="bg-t1-dark p-3.5 rounded-xl border border-t1-border">
+                    <span class="text-t1-red font-bold block mb-1"><i class="fa-solid fa-clock"></i> 학업 착석시간 진단</span>
+                    <p class="text-t1-muted">하루 평균 <strong>${currentUser.sitHours}시간</strong> 착석중입니다. ${currentUser.sitHours >= 10 ? '장시간 좌식으로 혈액순환 관리 및 골반 교정 스트레칭이 필수입니다.' : '적절한 좌식 비율을 유지하고 계십니다.'}</p>
+                </div>
+                <div class="bg-t1-dark p-3.5 rounded-xl border border-t1-border">
+                    <span class="text-t1-gold font-bold block mb-1"><i class="fa-solid fa-moon"></i> 수면 & 리커버리</span>
+                    <p class="text-t1-muted">평균 수면 <strong>${currentUser.sleepHours}시간</strong>. ${currentUser.sleepHours <= 5 ? '수면 부족은 식욕 조절 호르몬(렙틴)을 저하시킵니다. 7시간 이상 수면을 권장합니다.' : '양호한 수면으로 뇌 피로 회복이 활발합니다.'}</p>
+                </div>
+                <div class="bg-t1-dark p-3.5 rounded-xl border border-t1-border">
+                    <span class="text-emerald-400 font-bold block mb-1"><i class="fa-solid fa-cookie-bite"></i> 간식 패턴 조언</span>
+                    <p class="text-t1-muted">${currentUser.snackFreq === 'often' ? '당분 높은 간식 섭취 빈도가 많아 당류 섭취 감량이 강력히 추천됩니다.' : '우수한 식습관으로 무분별한 당류 섭취를 잘 제어하고 있습니다.'}</p>
+                </div>
+            `;
+
+            // Recommended Diet
+            const dietContainer = document.getElementById('dietPlanContainer');
+            dietContainer.innerHTML = `
+                <div class="bg-t1-dark border border-t1-border rounded-xl p-4">
+                    <span class="text-xs font-bold text-t1-red block mb-1">BREAKFAST / 아침</span>
+                    <h4 class="font-bold text-white text-xs">현미밥 + 계란후라이 + 샐러드</h4>
+                    <p class="text-[11px] text-t1-muted mt-2">두뇌 집중력을 돕는 복합 탄수화물과 단백질 조합</p>
+                </div>
+                <div class="bg-t1-dark border border-t1-border rounded-xl p-4">
+                    <span class="text-xs font-bold text-t1-gold block mb-1">LUNCH / 점심 및 급식</span>
+                    <h4 class="font-bold text-white text-xs">급식 적정량 + 튀김류 반찬 조절</h4>
+                    <p class="text-[11px] text-t1-muted mt-2">밥량은 적당히 유지하고 국물보다는 건더기 위주 식사</p>
+                </div>
+                <div class="bg-t1-dark border border-t1-border rounded-xl p-4">
+                    <span class="text-xs font-bold text-t1-red block mb-1">DINNER / 저녁</span>
+                    <h4 class="font-bold text-white text-xs">닭가슴살/두부 + 데친 채소</h4>
+                    <p class="text-[11px] text-t1-muted mt-2">저녁 8시 이전 식사, 가벼운 탄수화물과 단백질 위주</p>
+                </div>
+            `;
+
+            // Workout Quests
+            const workoutContainer = document.getElementById('workoutQuestContainer');
+            workoutContainer.innerHTML = `
+                <div class="flex items-center justify-between bg-t1-dark border border-t1-border p-3.5 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-t1-red/10 text-t1-red flex items-center justify-center font-bold text-xs">1</div>
+                        <div>
+                            <div class="font-bold text-xs text-white">거북목 & 척추 교정 스트레칭</div>
+                            <div class="text-[11px] text-t1-muted">공부 중간 틈틈이 | 10분 소요</div>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-t1-gold">달성 목표</span>
+                </div>
+                <div class="flex items-center justify-between bg-t1-dark border border-t1-border p-3.5 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-t1-red/10 text-t1-red flex items-center justify-center font-bold text-xs">2</div>
+                        <div>
+                            <div class="font-bold text-xs text-white">유산소 전신 체조 (버피 & 점핑잭)</div>
+                            <div class="text-[11px] text-t1-muted">체력 증진 칼로리 소모 | 15분 소요</div>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-t1-gold">달성 목표</span>
+                </div>
+                <div class="flex items-center justify-between bg-t1-dark border border-t1-border p-3.5 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-t1-red/10 text-t1-red flex items-center justify-center font-bold text-xs">3</div>
+                        <div>
+                            <div class="font-bold text-xs text-white">기초 하체 근력 (스쿼트 & 플랭크)</div>
+                            <div class="text-[11px] text-t1-muted">기초 대사량 향상 유도</div>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-t1-gold">달성 목표</span>
+                </div>
+            `;
+
+            updateIntakeUI();
+        }
+
+        // Safe Number Parser for API Data
+        function parseNutrientValue(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            const cleanStr = String(val).replace(/,/g, '').trim();
+            const num = parseFloat(cleanStr);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Search Food API
+        async function searchFoodAPI(e) {
+            e.preventDefault();
+
+            const keyword = document.getElementById('foodKeyword').value.trim();
+            if (!keyword) return;
+
+            const loader = document.getElementById('searchStatus');
+            const grid = document.getElementById('foodResultGrid');
+
+            loader.classList.remove('hidden');
+            grid.innerHTML = '';
+
+            try {
+                const url = new URL('https://glittery-dasik-3cb269.netlify.app/api/food');
+                url.search = new URLSearchParams({
+                    pageNo: '1',
+                    numOfRows: '15',
+                    type: 'json',
+                    FOOD_NM_KR: keyword
+                });
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                loader.classList.add('hidden');
+
+                const resultCode = data?.header?.resultCode;
+                const items = data?.body?.items || [];
+
+                if (resultCode === '03' || !items || items.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-t1-muted text-xs">
+                            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-t1-red block"></i>
+                            '${keyword}'에 대한 검색 결과가 없습니다. 다른 음식 이름을 입력해 보세요.
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = items.map((item) => {
+                    const name = item.FOOD_NM_KR || '식품명 정보 없음';
+                    const size = item.SERVING_SIZE || '1회 제공량';
+                    const cal = parseNutrientValue(item.AMT_NUM1);
+                    const protein = parseNutrientValue(item.AMT_NUM3);
+                    const fat = parseNutrientValue(item.AMT_NUM4);
+                    const carb = parseNutrientValue(item.AMT_NUM6);
+                    const sodium = parseNutrientValue(item.AMT_NUM13);
+
+                    return `
+                        <div class="bg-t1-dark border border-t1-border hover:border-t1-red rounded-xl p-4 flex flex-col justify-between transition group">
+                            <div>
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <h3 class="font-bold text-white text-sm group-hover:text-t1-red transition">${name}</h3>
+                                    <span class="text-[10px] bg-t1-card text-t1-muted border border-t1-border px-2 py-0.5 rounded">${size}</span>
+                                </div>
+                                <div class="text-xl font-extrabold text-t1-gold my-1">
+                                    ${cal.toLocaleString()} <span class="text-xs font-bold text-t1-muted">kcal</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-t1-muted mt-3 pt-2 border-t border-t1-border/50">
+                                    <div>탄수화물: <strong class="text-white">${carb}g</strong></div>
+                                    <div>단백질: <strong class="text-white">${protein}g</strong></div>
+                                    <div>지방: <strong class="text-white">${fat}g</strong></div>
+                                    <div>나트륨: <strong class="text-t1-red">${sodium}mg</strong></div>
+                                </div>
+                            </div>
+                            <button onclick="addToIntake('${encodeURIComponent(name)}', ${cal}, ${carb}, ${protein}, ${fat}, ${sodium})" 
+                                class="w-full mt-3 py-2 rounded-lg bg-t1-card hover:bg-t1-red border border-t1-border hover:border-t1-red font-bold text-xs text-white transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i> 오늘의 식단에 추가
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error(err);
+                loader.classList.add('hidden');
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-t1-red text-xs font-bold">
+                        <i class="fa-solid fa-circle-exclamation text-3xl mb-2 block"></i>
+                        데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.
+                    </div>
+                `;
+            }
+        }
+
+        // Add Food to Today's Intake List
+        function addToIntake(encodedName, cal, carb, protein, fat, sodium) {
+            const name = decodeURIComponent(encodedName);
+            todayIntake.push({
+                id: Date.now(),
+                name,
+                cal,
+                carb,
+                protein,
+                fat,
+                sodium
+            });
+
+            updateIntakeUI();
+            showToast(`'${name}'이(가) 오늘의 식단에 추가되었습니다!`, 'success');
+        }
+
+        // Remove Item
+        function removeIntakeItem(id) {
+            todayIntake = todayIntake.filter(item => item.id !== id);
+            updateIntakeUI();
+            showToast('기록된 음식이 삭제되었습니다.', 'info');
+        }
+
+        // Update Intake UI & Totals
+        function updateIntakeUI() {
+            const listEl = document.getElementById('intakeList');
+            if (!listEl) return;
+
+            if (todayIntake.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-12 text-t1-muted text-xs">
+                        <i class="fa-solid fa-bowl-food text-3xl mb-2 text-t1-border block"></i>
+                        아직 기록된 음식이 없습니다.<br>검색을 통해 먹은 음식을 추가해 보세요.
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = todayIntake.map(item => `
+                    <div class="bg-t1-dark border border-t1-border rounded-xl p-3 flex items-center justify-between gap-2">
+                        <div>
+                            <div class="font-bold text-xs text-white">${item.name}</div>
+                            <div class="text-[11px] text-t1-muted mt-0.5">
+                                <span class="text-t1-gold font-bold">${item.cal} kcal</span> | 탄:${item.carb}g 단:${item.protein}g 지:${item.fat}g
+                            </div>
+                        </div>
+                        <button onclick="removeIntakeItem(${item.id})" class="text-t1-muted hover:text-t1-red text-xs px-2 py-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // Totals
+            const totalCal = todayIntake.reduce((acc, cur) => acc + cur.cal, 0);
+            const totalCarb = todayIntake.reduce((acc, cur) => acc + cur.carb, 0);
+            const totalProtein = todayIntake.reduce((acc, cur) => acc + cur.protein, 0);
+            const totalFat = todayIntake.reduce((acc, cur) => acc + cur.fat, 0);
+            const totalSodium = todayIntake.reduce((acc, cur) => acc + cur.sodium, 0);
+
+            document.getElementById('statConsumedCal').innerText = totalCal.toLocaleString();
+            document.getElementById('totalCarb').innerText = `${totalCarb.toFixed(1)} g`;
+            document.getElementById('totalProtein').innerText = `${totalProtein.toFixed(1)} g`;
+            document.getElementById('totalFat').innerText = `${totalFat.toFixed(1)} g`;
+            document.getElementById('totalSodium').innerText = `${totalSodium.toFixed(0)} mg`;
+
+            // Progress Bar
+            if (currentUser && currentUser.targetCalorie) {
+                const percent = Math.min(100, Math.round((totalCal / currentUser.targetCalorie) * 100));
+                const bar = document.getElementById('statCalProgress');
+                bar.style.width = `${percent}%`;
+            }
+        }
+    </script>
+</body>
+</html>
