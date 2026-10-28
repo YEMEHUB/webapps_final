@@ -1,1 +1,972 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitEat - Classic Vintage Meal Journal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vintage & Classic Serif Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Gowun Batang', 'Nanum Myeongjo', serif;
+            background-color: #f2e3d5;
+            color: #3d2b1f;
+            /* Enhanced textured parchment grid background */
+            background-image: 
+                radial-gradient(rgba(184, 152, 125, 0.25) 1px, transparent 0),
+                radial-gradient(rgba(110, 80, 56, 0.15) 1px, transparent 0),
+                linear-gradient(to right, rgba(110, 80, 56, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(110, 80, 56, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px, 40px 40px, 24px 24px, 24px 24px;
+            background-position: 0 0, 10px 10px, 0 0, 0 0;
+        }
+
+        /* Vintage Paper & Ink Style Elements with Deckle / Aging paper texture */
+        .vintage-box {
+            background-color: #fdfbf7;
+            background-image: 
+                radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6) 0%, rgba(242, 227, 213, 0.4) 100%),
+                repeating-linear-gradient(0deg, rgba(110, 80, 56, 0.02), rgba(110, 80, 56, 0.02) 1px, transparent 1px, transparent 3px);
+            border: 2px solid #5a3e2b;
+            box-shadow: 
+                5px 5px 0px 0px #3d2b1f,
+                inset 0 0 30px rgba(184, 152, 125, 0.25),
+                inset 0 0 8px rgba(110, 80, 56, 0.15);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .vintage-box::before {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            border: 1px dashed #a88265;
+            pointer-events: none;
+            border-radius: 2px;
+            opacity: 0.85;
+        }
+
+        .vintage-btn {
+            position: relative;
+            display: inline-block;
+            padding: 8px 16px;
+            font-family: 'Gowun Batang', serif;
+            font-weight: 700;
+            color: #fdfbf7;
+            background-color: #5a3e2b;
+            background-image: linear-gradient(180deg, #6e5038 0%, #4a3222 100%);
+            border: 1px solid #2a1d15;
+            box-shadow: 2px 2px 0px 0px #2a1d15;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            border-radius: 3px;
+        }
+        .vintage-btn:hover {
+            background-color: #7a583e;
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px 0px #2a1d15;
+        }
+        .vintage-btn:active {
+            box-shadow: 1px 1px 0px 0px #2a1d15;
+            transform: translate(1px, 1px);
+        }
+
+        .vintage-btn-gold {
+            background-color: #8c674b;
+            background-image: linear-gradient(180deg, #9e7657 0%, #78563c 100%);
+            color: #fdfbf7;
+            border-color: #2a1d15;
+        }
+        .vintage-btn-gold:hover { 
+            background-color: #a37b5c; 
+        }
+
+        /* Gauge Bars */
+        .bar-container {
+            background: #ebdcd0;
+            border: 1.5px solid #5a3e2b;
+            padding: 2px;
+            position: relative;
+            border-radius: 3px;
+            box-shadow: inset 1px 1px 3px rgba(61, 43, 31, 0.2);
+        }
+        .bar-fill {
+            height: 18px;
+            transition: width 0.4s ease-in-out;
+            border-radius: 1px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Typewriter Effect Font for Accent Numbers */
+        .typewriter-font {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        /* Paper Grain & Vignette Overlay */
+        .sepia-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at center, transparent 50%, rgba(70, 45, 25, 0.12) 100%),
+                repeating-radial-gradient(circle at 20% 30%, rgba(139, 90, 43, 0.03) 0px, transparent 2px, transparent 4px);
+            z-index: 999;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-2 sm:p-4 selection:bg-amber-200 selection:text-amber-900">
+
+    <!-- Sepia Grain Overlay -->
+    <div class="sepia-overlay"></div>
+
+    <!-- Header Section -->
+    <header class="vintage-box p-4 mb-6 bg-[#fdfbf7] border-[#5a3e2b] max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span class="text-[10px] text-[#6e5038] block font-bold uppercase">현재 신체 자격</span>
+                <span id="playerRank" class="text-xs font-bold text-[#3d2b1f]">레벨 1 클래식 탐험가</span>
+            </div>
+            <button onclick="resetData()" class="vintage-btn text-xs bg-[#8c674b] hover:bg-[#6e5038]">
+                <i class="fa-solid fa-rotate-left mr-1"></i> 재설정
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+        
+        <!-- LEFT COLUMN: Physical Input & Food Inventory (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- 1. Player Stats Input Card -->
+            <div class="vintage-box p-5 bg-[#fcf7f2]">
+                <div class="flex items-center space-x-2 border-b-2 border-[#b8987d] pb-3 mb-4">
+                    <i class="fa-solid fa-sliders text-[#6e5038] text-xl"></i>
+                    <h2 class="text-base font-bold text-[#3d2b1f]">신체 지표 측정 및 설정</h2>
+                </div>
+
+                <form id="calcForm" onsubmit="calculateNutrition(event)" class="space-y-4 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Height -->
+                        <div>
+                            <label class="block text-[#6e5038] font-bold mb-1">신장 (cm)</label>
+                            <input type="number" id="height" value="175" min="100" max="230" required
+                                class="typewriter-font w-full bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 text-right font-bold focus:outline-none focus:border-[#3d2b1f] rounded-sm shadow-inner">
+                        </div>
+                        <!-- Weight -->
+                        <div>
+                            <label class="block text-[#6e5038] font-bold mb-1">체중 (kg)</label>
+                            <input type="number" id="weight" value="70" min="30" max="200" required
+                                class="typewriter-font w-full bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 text-right font-bold focus:outline-none focus:border-[#3d2b1f] rounded-sm shadow-inner">
+                        </div>
+                    </div>
+
+                    <!-- Activity Level -->
+                    <div>
+                        <label class="block text-[#6e5038] font-bold mb-1">일상 활동 수준</label>
+                        <select id="activity" class="w-full bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 focus:outline-none focus:border-[#3d2b1f] rounded-sm font-semibold shadow-inner">
+                            <option value="1.2">낮음 (정적인 생활 패턴)</option>
+                            <option value="1.375" selected>보통 (적당한 일상 활동)</option>
+                            <option value="1.55">높음 (규칙적인 운동 수행)</option>
+                            <option value="1.725">매우 높음 (격렬한 신체 활동)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gender & Age -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[#6e5038] font-bold mb-1">성별</label>
+                            <select id="gender" class="w-full bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 rounded-sm font-semibold shadow-inner">
+                                <option value="male" selected>남성</option>
+                                <option value="female">여성</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[#6e5038] font-bold mb-1">연령 (세)</label>
+                            <input type="number" id="age" value="30" min="10" max="100" required
+                                class="typewriter-font w-full bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 rounded-sm font-bold shadow-inner">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="vintage-btn vintage-btn-gold w-full py-3 text-sm font-bold flex items-center justify-center gap-2 mt-2">
+                        <i class="fa-solid fa-feather text-[#fdfbf7]"></i>
+                        <span>분석 및 30일 클래식 식단 작성</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. Food Database Search -->
+            <div class="vintage-box p-5 bg-[#fdfbf7]">
+                <div class="flex items-center justify-between border-b-2 border-[#b8987d] pb-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-utensils text-[#6e5038] text-lg"></i>
+                        <h2 class="text-base font-bold text-[#3d2b1f]">식품 백과사전 & 전국 주요 맛집</h2>
+                    </div>
+                    <span class="text-[10px] text-[#6e5038] border border-[#8c674b] px-1.5 py-0.5 rounded bg-[#f4eae1]">기록 보관소</span>
+                </div>
+
+                <!-- Tab Switching: Food Database vs Regional Restaurants -->
+                <div class="flex space-x-2 mb-3 border-b border-[#b8987d] pb-2 text-xs">
+                    <button id="tabFoodBtn" onclick="switchLeftTab('food')" class="vintage-btn text-[11px] px-2.5 py-1">식품 칼로리</button>
+                    <button id="tabRestBtn" onclick="switchLeftTab('restaurant')" class="vintage-btn text-[11px] px-2.5 py-1 bg-[#ede2d8] text-[#3d2b1f]">전국 유명 맛집 탐색</button>
+                </div>
+
+                <!-- Section A: Food Search -->
+                <div id="foodSearchSection" class="space-y-3 text-xs">
+                    <div class="flex gap-2">
+                        <input type="text" id="foodQuery" placeholder="식품 명칭 검색... (예: 닭가슴살, 현미밥)" 
+                            onkeypress="if(event.key==='Enter') searchFood()"
+                            class="flex-1 bg-[#f4eae1] text-[#3d2b1f] border border-[#6e5038] px-2 py-1.5 focus:outline-none focus:border-[#3d2b1f] rounded-sm shadow-inner">
+                        <button onclick="searchFood()" class="vintage-btn">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+
+                    <!-- Item Tag Quick Select -->
+                    <div class="flex flex-wrap gap-1 text-[11px] pt-1">
+                        <span class="text-[#6e5038] font-bold mr-1">주요 색인:</span>
+                        <button onclick="quickSearch('닭가슴살')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] border border-[#8c674b] px-1.5 py-0.5 text-[#3d2b1f] rounded-sm shadow-sm">닭가슴살</button>
+                        <button onclick="quickSearch('현미밥')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] border border-[#8c674b] px-1.5 py-0.5 text-[#3d2b1f] rounded-sm shadow-sm">현미밥</button>
+                        <button onclick="quickSearch('흑돼지')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] border border-[#8c674b] px-1.5 py-0.5 text-[#3d2b1f] rounded-sm shadow-sm">흑돼지</button>
+                        <button onclick="quickSearch('연어')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] border border-[#8c674b] px-1.5 py-0.5 text-[#3d2b1f] rounded-sm shadow-sm">연어</button>
+                        <button onclick="quickSearch('고구마')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] border border-[#8c674b] px-1.5 py-0.5 text-[#3d2b1f] rounded-sm shadow-sm">고구마</button>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div id="searchResults" class="mt-3 max-h-56 overflow-y-auto space-y-2 pr-1 hidden">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+                <!-- Section B: Regional Restaurants List -->
+                <div id="restaurantSection" class="space-y-3 text-xs hidden">
+                    <!-- Region Filter Tags -->
+                    <div class="flex flex-wrap gap-1 text-[10px] pb-1 border-b border-[#ede2d8]">
+                        <button onclick="filterRegion('all')" class="bg-[#6e5038] text-[#fcf7f2] border border-[#3d2b1f] px-2 py-0.5 rounded-sm">전체</button>
+                        <button onclick="filterRegion('제주')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] text-[#3d2b1f] border border-[#8c674b] px-2 py-0.5 rounded-sm">🍊 제주 서귀포</button>
+                        <button onclick="filterRegion('서울')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] text-[#3d2b1f] border border-[#8c674b] px-2 py-0.5 rounded-sm">🏛️ 서울</button>
+                        <button onclick="filterRegion('부산')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] text-[#3d2b1f] border border-[#8c674b] px-2 py-0.5 rounded-sm">🌊 부산</button>
+                        <button onclick="filterRegion('강릉')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] text-[#3d2b1f] border border-[#8c674b] px-2 py-0.5 rounded-sm">🌲 강릉</button>
+                        <button onclick="filterRegion('전주')" class="bg-[#ede2d8] hover:bg-[#d6c0b0] text-[#3d2b1f] border border-[#8c674b] px-2 py-0.5 rounded-sm">🍱 전주</button>
+                    </div>
+
+                    <!-- Restaurant List Container -->
+                    <div id="restaurantList" class="max-h-72 overflow-y-auto space-y-2 pr-1">
+                        <!-- Dynamic Restaurant Items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. NEW: Recommended Exercise & Activity Quest Card -->
+            <div class="vintage-box p-5 bg-[#fcf7f2]">
+                <div class="flex items-center justify-between border-b-2 border-[#b8987d] pb-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-person-running text-[#6e5038] text-xl"></i>
+                        <h2 class="text-base font-bold text-[#3d2b1f]">맞춤 신체 활동 & 운동 퀘스트</h2>
+                    </div>
+                    <span id="targetWorkoutBurn" class="typewriter-font text-xs font-bold text-[#6e5038] bg-[#f4eae1] border border-[#8c674b] px-2 py-0.5 rounded-sm">소모 목표: 300 kcal</span>
+                </div>
+
+                <p id="workoutNotice" class="text-[11px] text-[#8c674b] font-semibold mb-3">
+                    🏃 [운동 처방]: 체형 및 대사량에 적합한 클래식 트레이닝 처방입니다.
+                </p>
+
+                <!-- Exercise List -->
+                <div id="workoutListContainer" class="space-y-2 text-xs">
+                    <!-- Dynamic Workouts -->
+                </div>
+
+                <!-- Workout Tip -->
+                <div class="mt-3 p-2.5 bg-[#f4eae1] border border-[#8c674b] text-[11px] text-[#3d2b1f] flex items-start space-x-2 rounded-sm">
+                    <i class="fa-solid fa-dumbbell text-[#8c674b] text-sm mt-0.5"></i>
+                    <span id="workoutTipText">💡 [운동 가이드]: 운동 전후 충분한 수분 섭취와 스트레칭을 꼭 병행하세요.</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Health Gauge Status & 30-Day Quest Table (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- 3. Vintage BMI Status Bar & Health Gauge Card -->
+            <div class="vintage-box p-5 bg-[#fdfbf7] space-y-5">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b-2 border-[#b8987d] pb-3">
+                    <div>
+                        <span class="text-[10px] text-[#8c674b] tracking-widest font-bold block uppercase">신체 진단 결과</span>
+                        <h2 class="text-xl font-bold text-[#3d2b1f]">비만도 및 영양 대사 수치</h2>
+                    </div>
+                    <!-- Current BMI Badge -->
+                    <div id="bmiBadge" class="bg-[#ede2d8] border border-[#6e5038] px-3 py-1 text-center rounded">
+                        <span class="text-[10px] text-[#6e5038] block font-bold">BMI 수치</span>
+                        <span id="bmiScoreText" class="typewriter-font text-lg font-bold text-[#3d2b1f]">22.9</span>
+                    </div>
+                </div>
+
+                <!-- BMI visual Gauge -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span class="text-[#6e5038]">체질량지수(BMI) 구간:</span>
+                        <span id="bmiStatusTitle" class="text-[#3d2b1f] font-extrabold">정상 범위</span>
+                    </div>
+
+                    <!-- Gauge Track -->
+                    <div class="bar-container relative h-7 bg-[#e8dad0] border border-[#6e5038] flex items-center overflow-hidden">
+                        <!-- Color Sections -->
+                        <div class="w-[20%] h-full bg-[#d6c0b0] border-r border-[#b8987d] flex items-center justify-center text-[9px] text-[#3d2b1f] font-bold">저체중</div>
+                        <div class="w-[25%] h-full bg-[#a3b899] border-r border-[#b8987d] flex items-center justify-center text-[9px] text-[#1c3814] font-bold">정상</div>
+                        <div class="w-[20%] h-full bg-[#e3c099] border-r border-[#b8987d] flex items-center justify-center text-[9px] text-[#4d2f0d] font-bold">과체중</div>
+                        <div class="w-[35%] h-full bg-[#d9a59a] flex items-center justify-center text-[9px] text-[#421610] font-bold">비만</div>
+
+                        <!-- Indicator Pointer Arrow -->
+                        <div id="bmiPointer" class="absolute top-0 bottom-0 w-3 bg-[#3d2b1f] border border-[#fcf7f2] transform -translate-x-1/2 transition-all duration-500 shadow-md flex items-center justify-center text-[8px] text-[#fcf7f2] font-black" style="left: 42%;">
+                            ▲
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-[9px] text-[#8c674b] px-1 typewriter-font font-bold">
+                        <span>18.5 미만</span>
+                        <span>18.5 ~ 22.9</span>
+                        <span>23.0 ~ 24.9</span>
+                        <span>25.0 이상</span>
+                    </div>
+                </div>
+
+                <!-- RPG Status Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                    <div class="bg-[#f4eae1] p-2 border border-[#b8987d] rounded-sm">
+                        <span class="text-[10px] text-[#8c674b] font-bold block">기초 대사량</span>
+                        <span id="bmrValue" class="typewriter-font text-sm font-bold text-[#3d2b1f]">1,680 kcal</span>
+                    </div>
+                    <div class="bg-[#f4eae1] p-2 border border-[#b8987d] rounded-sm">
+                        <span class="text-[10px] text-[#8c674b] font-bold block">목표 권장 칼로리</span>
+                        <span id="tdeeValue" class="typewriter-font text-sm font-bold text-[#3d2b1f]">2,310 kcal</span>
+                    </div>
+                    <div class="bg-[#f4eae1] p-2 border border-[#b8987d] rounded-sm">
+                        <span class="text-[10px] text-[#8c674b] font-bold block">목표 단백질</span>
+                        <span id="proteinTarget" class="typewriter-font text-sm font-bold text-[#3d2b1f]">105g</span>
+                    </div>
+                    <div class="bg-[#f4eae1] p-2 border border-[#b8987d] rounded-sm">
+                        <span class="text-[10px] text-[#8c674b] font-bold block">권장 수분 섭취량</span>
+                        <span id="waterTarget" class="typewriter-font text-sm font-bold text-[#3d2b1f]">2.1 L</span>
+                    </div>
+                </div>
+
+                <!-- Macro Breakdown Bars -->
+                <div class="space-y-2 text-xs pt-2 border-t border-[#b8987d]">
+                    <div>
+                        <div class="flex justify-between mb-1 font-bold">
+                            <span class="text-[#6e5038]"><i class="fa-solid fa-wheat-awn mr-1"></i> 탄수화물 권장량</span>
+                            <span id="carbGrams" class="typewriter-font text-[#3d2b1f]">288g ~ 346g</span>
+                        </div>
+                        <div class="bar-container border-[#6e5038]">
+                            <div id="carbBar" class="bar-fill bg-[#c79c7e]" style="width: 55%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-1 font-bold">
+                            <span class="text-[#6e5038]"><i class="fa-solid fa-drumstick-bite mr-1"></i> 단백질 권장량</span>
+                            <span id="proteinGrams" class="typewriter-font text-[#3d2b1f]">86g ~ 115g</span>
+                        </div>
+                        <div class="bar-container border-[#6e5038]">
+                            <div id="proteinBar" class="bar-fill bg-[#8c674b]" style="width: 20%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-1 font-bold">
+                            <span class="text-[#6e5038]"><i class="fa-solid fa-cheese mr-1"></i> 지방 권장량</span>
+                            <span id="fatGrams" class="typewriter-font text-[#3d2b1f]">51g ~ 64g</span>
+                        </div>
+                        <div class="bar-container border-[#6e5038]">
+                            <div id="fatBar" class="bar-fill bg-[#a88265]" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 4. 30-Day Quest Meal Program Card -->
+            <div class="vintage-box p-5 bg-[#fcf7f2]">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 border-b-2 border-[#b8987d] pb-3">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-calendar-days text-[#6e5038] text-xl"></i>
+                            <h2 class="text-base font-bold text-[#3d2b1f]">30일 식단 및 실천 일지</h2>
+                        </div>
+                        <p id="dietStrategyNotice" class="text-[11px] text-[#8c674b] mt-1 font-semibold">
+                            📜 [처방 식단]: 진단 결과에 맞춘 식단 계획을 작성 중입니다.
+                        </p>
+                    </div>
+                    
+                    <!-- Week Selection Buttons -->
+                    <div class="flex space-x-1 text-xs shrink-0">
+                        <button onclick="setWeek(1)" id="w1Btn" class="vintage-btn text-[11px] px-2 py-1">1 주차</button>
+                        <button onclick="setWeek(2)" id="w2Btn" class="vintage-btn text-[11px] px-2 py-1 bg-[#ede2d8] text-[#3d2b1f]">2 주차</button>
+                        <button onclick="setWeek(3)" id="w3Btn" class="vintage-btn text-[11px] px-2 py-1 bg-[#ede2d8] text-[#3d2b1f]">3 주차</button>
+                        <button onclick="setWeek(4)" id="w4Btn" class="vintage-btn text-[11px] px-2 py-1 bg-[#ede2d8] text-[#3d2b1f]">4 주차</button>
+                    </div>
+                </div>
+
+                <!-- Day Selector Tabs -->
+                <div class="flex overflow-x-auto space-x-1 pb-2 mb-4 text-xs" id="dayTabs">
+                    <!-- Dynamic Day Tabs -->
+                </div>
+
+                <!-- Detailed Day Quest Log -->
+                <div class="bg-[#f4eae1] p-4 border border-[#b8987d] relative rounded-sm">
+                    <div class="flex justify-between items-center mb-3 border-b border-[#b8987d] pb-2">
+                        <span id="selectedDayTitle" class="font-bold text-[#3d2b1f] text-sm">1일차 맞춤 식단</span>
+                        <span id="selectedDayCalories" class="typewriter-font text-xs font-bold text-[#6e5038] bg-[#fcf7f2] px-2 py-0.5 border border-[#8c674b] rounded-sm">목표: 2,310 kcal</span>
+                    </div>
+
+                    <!-- Meals Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" id="mealsContainer">
+                        <!-- Breakfast -->
+                        <div class="bg-[#fcf7f2] p-3 border border-[#b8987d] space-y-2 rounded-sm">
+                            <div class="flex justify-between items-center border-b border-[#ede2d8] pb-1 text-[#6e5038] font-bold">
+                                <span><i class="fa-solid fa-sun mr-1"></i>아침 (08:00)</span>
+                            </div>
+                            <ul class="space-y-1.5 text-[#3d2b1f]" id="meal-1"></ul>
+                        </div>
+
+                        <!-- Lunch -->
+                        <div class="bg-[#fcf7f2] p-3 border border-[#b8987d] space-y-2 rounded-sm">
+                            <div class="flex justify-between items-center border-b border-[#ede2d8] pb-1 text-[#6e5038] font-bold">
+                                <span><i class="fa-solid fa-utensils mr-1"></i>점심 (12:30)</span>
+                            </div>
+                            <ul class="space-y-1.5 text-[#3d2b1f]" id="meal-2"></ul>
+                        </div>
+
+                        <!-- Dinner -->
+                        <div class="bg-[#fcf7f2] p-3 border border-[#b8987d] space-y-2 rounded-sm">
+                            <div class="flex justify-between items-center border-b border-[#ede2d8] pb-1 text-[#6e5038] font-bold">
+                                <span><i class="fa-solid fa-moon mr-1"></i>저녁 (18:30)</span>
+                            </div>
+                            <ul class="space-y-1.5 text-[#3d2b1f]" id="meal-3"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Quest Tip Box -->
+                    <div class="mt-4 p-2.5 bg-[#fcf7f2] border border-[#8c674b] text-[11px] text-[#3d2b1f] flex items-start space-x-2 rounded-sm">
+                        <i class="fa-solid fa-pen-nib text-[#8c674b] text-sm mt-0.5"></i>
+                        <span id="questTipText">💡 [클래식 식단 지침]: 정제된 식재료를 피하고 자연 그대로의 양질 영양소를 섭취하세요.</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto w-full text-center text-xs text-[#6e5038] py-6 mt-8 border-t border-[#b8987d]">
+        <p>© 2026 FitEat Vintage Edition. All rights reserved.</p>
+        <p class="text-[10px] mt-1 text-[#8c674b]">건강하고 균형 잡힌 라이프스타일을 위한 빈티지 가이드</p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // Food Database Mock Data
+        const foodDatabase = [
+            { name: "닭가슴살 (훈제)", kcal: 165, carb: 0, protein: 31, fat: 3.6, gram: "100g" },
+            { name: "제주 흑돼지 오겹살/목살", kcal: 242, carb: 0, protein: 21.1, fat: 17.5, gram: "100g" },
+            { name: "현미밥", kcal: 150, carb: 33, protein: 3, fat: 1, gram: "130g" },
+            { name: "계란 후라이", kcal: 89, carb: 0.4, protein: 6.3, fat: 7, gram: "1개" },
+            { name: "제주 고기국수", kcal: 450, carb: 62, protein: 22, fat: 12, gram: "1대접" },
+            { name: "제주 멸고국수", kcal: 380, carb: 58, protein: 18, fat: 8, gram: "1대접" },
+            { name: "아보카도 샐러드", kcal: 220, carb: 12, protein: 3, fat: 18, gram: "150g" },
+            { name: "구운 연어 스테이크", kcal: 206, carb: 0, protein: 22, fat: 12, gram: "100g" },
+            { name: "소고기 우둔살", kcal: 137, carb: 0, protein: 22.3, fat: 4.7, gram: "100g" },
+            { name: "고구마 (찐것)", kcal: 114, carb: 26, protein: 1.5, fat: 0.2, gram: "100g" },
+            { name: "그릭 요거트", kcal: 90, carb: 4, protein: 10, fat: 4, gram: "100g" },
+            { name: "두부 부침", kcal: 95, carb: 2, protein: 8, fat: 6, gram: "100g" },
+            { name: "방울토마토", kcal: 18, carb: 4, protein: 0.9, fat: 0.2, gram: "100g" }
+        ];
+
+        // Expanded Regional Restaurants Database
+        const regionalRestaurants = [
+            // --- 제주 서귀포 ---
+            { region: "제주", category: "흑돼지", name: "멋진녀석들 흑돼지 제주 서귀포점", address: "서홍로 241", menu: "흑돼지 구이", desc: "두툼하고 질 좋은 흑돼지를 즐길 수 있는 서귀포 고깃집입니다." },
+            { region: "제주", category: "흑돼지", name: "돈사향 올레시장본점", address: "천지로 20", menu: "흑돼지 구이", desc: "올레시장 근처에 위치해 있으며, 친절한 서비스와 육즙 가득한 흑돼지가 특징입니다." },
+            { region: "제주", category: "흑돼지", name: "우녁집 올레시장점", address: "명동로 13-5", menu: "흑돼지 구이", desc: "올레시장 도보 거리에 위치해 접근성이 좋고, 고기 질에 대한 방문객 평이 우수합니다." },
+            { region: "제주", category: "흑돼지", name: "꺼멍목장", address: "이어도로 338", menu: "흑돼지 오겹살, 목살", desc: "넓은 매장과 탁 트인 정원 전경을 바라보며 흑돼지를 즐길 수 있는 운치 있는 곳입니다." },
+            { region: "제주", category: "흑돼지", name: "주공한라식육식당", address: "서귀포시", menu: "정육식당형 삼겹살, 목살", desc: "정육식당 형태로 운영되어 가성비가 좋고 신선한 고기를 맛볼 수 있는 로컬 식당입니다." },
+            { region: "제주", category: "국수", name: "솔동산고기국수 서귀포올레시장본점", address: "부두로 23", menu: "고기국수, 비빔국수", desc: "진한 육수와 담백한 수육이 올려진 제주 향토 고기국수 전문점입니다." },
+            { region: "제주", category: "국수", name: "고씨네천지국수 올레시장본점", address: "중앙로79번길 4", menu: "멸고국수, 비빔국수", desc: "깔끔하고 깊은 국물 맛으로 올레시장 인근에서 줄 서서 먹는 인기 국수 맛집입니다." },
+            { region: "제주", category: "해산물", name: "오후의 어부", address: "태평로 444", menu: "숙성회, 제철 해산물", desc: "신선한 제철 회와 해산물 요리를 분위기 있게 즐길 수 있는 이자카야형 횟집입니다." },
+            { region: "제주", category: "매콤", name: "제쭈", address: "동홍중앙로 58-8", menu: "쭈꾸미 볶음", desc: "매콤한 양념과 통통한 쭈꾸미 볶음으로 높은 평점을 받는 현지 맛집입니다." },
+            { region: "제주", category: "한정식", name: "제주도 서귀포 한정식 맛집 대들보", address: "막숙포로 64", menu: "정갈한 한정식 한상차림", desc: "정갈하고 푸짐한 한상차림을 경험할 수 있는 제주 서귀포 대표 한정식 맛집입니다." },
+
+            // --- 서울 ---
+            { region: "서울", category: "한정식", name: "라연 (서울신라호텔)", address: "서울 중구 동호로 249", menu: "궁중 한정식 코스", desc: "전통 한식을 현대적으로 재해석하여 품격있는 정갈함을 자랑하는 미슐랭 한정식 레스토랑입니다." },
+            { region: "서울", category: "한식", name: "정식당", address: "서울 강남구 선릉로158길 11", menu: "모던 한식 퀴진", desc: "독창적인 한식 파인 다이닝 요리를 선보이는 강남 최고 수준의 다이닝 공간입니다." },
+            { region: "서울", category: "분식", name: "명동교자 본점", address: "서울 중구 명동10길 29", menu: "칼국수, 만두", desc: "깊은 진한 사골 육수와 부드러운 면발, 마늘 김치가 유명한 명동의 오래된 미쉐린 맛집입니다." },
+            { region: "서울", category: "구이", name: "우가", address: "서울 강남구 도산대로49길 22", menu: "숙성 한우 구이", desc: "차별화된 드라이에이징 기술로 육즙과 풍미를 극대화한 최고급 숙성 한우 전문점입니다." },
+
+            // --- 부산 ---
+            { region: "부산", category: "국수", name: "초량밀면", address: "부산 동구 중앙대로 225", menu: "물밀면, 비빔밀면, 왕만두", desc: "살얼음 동동 띄운 한방 육수와 쫄깃한 면발로 부산역 필수 코스로 꼽히는 밀면 맛집입니다." },
+            { region: "부산", category: "만두", name: "신발원", address: "부산 동구 대영로243번길 62", menu: "고기만두, 군만두", desc: "부산 차이나타운 전통을 이어온 고소하고 바삭한 만두 전문 노포 식당입니다." },
+            { region: "부산", category: "구이", name: "해운대암소갈비집", address: "부산 해운대구 중동2로10번길 32", menu: "생갈비, 양념갈비, 감자사리", desc: "부드러운 한우 갈비와 감자사리로 대표되는 해운대의 독보적인 갈비 맛집입니다." },
+
+            // --- 강릉 ---
+            { region: "강릉", category: "해산물", name: "엄지네포장마차 본점", address: "강원 강릉시 경강로2255번길 21", menu: "꼬막무침비빔밥", desc: "쫄깃한 꼬막과 매콤짭짤한 양념 비빔밥의 조화로 전국적인 인기를 끌어모은 맛집입니다." },
+            { region: "강릉", category: "한식", name: "동화가든", address: "강원 강릉시 초당순두부길 77", menu: "짬뽕순두부(짬순)", desc: "얼큰하고 칼칼한 불향 짬뽕 국물에 고소한 초당순두부를 곁들인 대표 진미입니다." },
+
+            // --- 전주 ---
+            { region: "전주", category: "한식", name: "한국집", address: "전북 전주시 완산구 어진길 119", menu: "전주 육회 비빔밥", desc: "미쉐린 가이드에 등재된 전주 비빔밥의 원조격 노포로 고소하고 신선한 재료가 인상적입니다." },
+            { region: "전주", category: "국밥", name: "현대옥 남부시장점", address: "전북 전주시 완산구 풍남문2길 63", menu: "토청 콩나물국밥", desc: "수란과 오징어 사리를 추가해 즐기는 수란 스타일 전주 콩나물국밥의 명가입니다." }
+        ];
+
+        // Meal Plans Database categorized by BMI status
+        const mealPlansByBmi = {
+            underweight: {
+                notice: "📜 [체중 증량 및 근육 증대 처방]: 탄수화물과 단백질 비율을 높인 영양 과잉 공급 식단입니다.",
+                tip: "식사 간격 사이에 소화가 쉬운 단백질 및 견과류 간식을 추가하여 에너지 공급을 지속하세요.",
+                sets: [
+                    {
+                        m1: [{ name: "현미 밥", amount: "200g" }, { name: "계란 후라이", amount: "2개" }, { name: "그릭 요거트", amount: "150g" }],
+                        m2: [{ name: "닭가슴살 훈제", amount: "150g" }, { name: "고구마 찐것", amount: "150g" }, { name: "아보카도 샐러드", amount: "100g" }],
+                        m3: [{ name: "제주 흑돼지 목살", amount: "200g" }, { name: "현미 밥", amount: "150g" }, { name: "두부 부침", amount: "100g" }]
+                    },
+                    {
+                        m1: [{ name: "고구마 찐것", amount: "200g" }, { name: "구운 연어 스테이크", amount: "120g" }, { name: "우유", amount: "200ml" }],
+                        m2: [{ name: "제주 고기국수", amount: "1대접" }, { name: "수육/돼지고기", amount: "100g" }, { name: "방울토마토", amount: "100g" }],
+                        m3: [{ name: "소고기 우둔살", amount: "180g" }, { name: "현미 밥", amount: "200g" }, { name: "구운 채소", amount: "100g" }]
+                    }
+                ]
+            },
+            normal: {
+                notice: "📜 [체중 유지 및 대사 안정 처방]: 탄단지 균형을 이룬 클래식 웰빙 유지 식단입니다.",
+                tip: "자연 그대로의 원물 식재료 위주로 섭취하여 신체 건강 균형을 오랫동안 유지하세요.",
+                sets: [
+                    {
+                        m1: [{ name: "현미 밥", amount: "130g" }, { name: "계란 후라이", amount: "1개" }, { name: "방울토마토", amount: "80g" }],
+                        m2: [{ name: "닭가슴살 훈제", amount: "120g" }, { name: "고구마 찐것", amount: "100g" }, { name: "아보카도 샐러드", amount: "100g" }],
+                        m3: [{ name: "구운 연어 스테이크", amount: "120g" }, { name: "현미 밥", amount: "100g" }, { name: "두부 부침", amount: "80g" }]
+                    },
+                    {
+                        m1: [{ name: "그릭 요거트", amount: "120g" }, { name: "삶은 계란", amount: "2개" }, { name: "사과", amount: "반 개" }],
+                        m2: [{ name: "소고기 우둔살", amount: "130g" }, { name: "현미 밥", amount: "130g" }, { name: "나물 반찬", amount: "80g" }],
+                        m3: [{ name: "제주 흑돼지 오겹살", amount: "120g" }, { name: "쌈채소 및 파채", amount: "150g" }, { name: "된장찌개", amount: "1대접" }]
+                    }
+                ]
+            },
+            overweight: {
+                notice: "📜 [체지방 감량 식단 처방]: 탄수화물 비율을 낮추고 단백질 및 식이섬유 위주로 구성되었습니다.",
+                tip: "식사 전 충분한 수분을 섭취하고 찌개류 국물보다는 건더기 위주로 드시는 것이 좋습니다.",
+                sets: [
+                    {
+                        m1: [{ name: "삶은 계란", amount: "2개" }, { name: "방울토마토", amount: "150g" }, { name: "아몬드", amount: "10알" }],
+                        m2: [{ name: "닭가슴살 훈제", amount: "130g" }, { name: "현미 밥", amount: "100g" }, { name: "양상추 샐러드", amount: "120g" }],
+                        m3: [{ name: "두부 부침", amount: "150g" }, { name: "구운 연어", amount: "100g" }, { name: "데친 브로콜리", amount: "100g" }]
+                    },
+                    {
+                        m1: [{ name: "그릭 요거트(무당)", amount: "100g" }, { name: "고구마 찐것", amount: "80g" }],
+                        m2: [{ name: "소고기 우둔살", amount: "120g" }, { name: "현미 밥", amount: "90g" }, { name: "모듬 쌈채소", amount: "150g" }],
+                        m3: [{ name: "닭가슴살 샐러드", amount: "150g" }, { name: "삶은 계란", amount: "1개" }]
+                    }
+                ]
+            },
+            obese: {
+                notice: "📜 [강력 대사 개선 & 칼로리 제한 처방]: 저탄수화물 고단백 중심의 강도 높은 감량 프로토콜입니다.",
+                tip: "정제 당분과 가공식품을 철저히 배제하고 식사 시간을 규정하여 공복 시간을 확보하세요.",
+                sets: [
+                    {
+                        m1: [{ name: "삶은 계란 흰자", amount: "3개" }, { name: "방울토마토", amount: "150g" }],
+                        m2: [{ name: "닭가슴살 훈제", amount: "150g" }, { name: "모듬 샐러드", amount: "150g" }, { name: "올리브유 드레싱", amount: "10g" }],
+                        m3: [{ name: "소고기 우둔살", amount: "130g" }, { name: "데친 야채 및 버섯", amount: "150g" }]
+                    },
+                    {
+                        m1: [{ name: "무당 그릭 요거트", amount: "100g" }, { name: "삶은 계란", amount: "1개" }],
+                        m2: [{ name: "구운 연어 스테이크", amount: "130g" }, { name: "아보카도", amount: "50g" }, { name: "어린잎 샐러드", amount: "100g" }],
+                        m3: [{ name: "두부 구이", amount: "180g" }, { name: "오이 및 당근 스틱", amount: "100g" }]
+                    }
+                ]
+            }
+        };
+
+        // NEW: Workout Routines Categorized by BMI Status
+        const workoutsByBmi = {
+            underweight: {
+                notice: "🏋️ [근력 강화 & 점진적 체중 증량 루틴]: 과도한 유산소를 피하고 과부하 근력 운동에 집중합니다.",
+                tip: "근육 합성 효율을 높이기 위해 운동 후 30분 이내에 탄수화물과 단백질을 함께 섭취하세요.",
+                burnTarget: "250~350 kcal",
+                list: [
+                    { name: "맨몸 맨땅 스쿼트 & 런지", duration: "3~4세트 (12회)", type: "하체 근력", icon: "fa-person-walking" },
+                    { name: "덤벨 / 밴드 루마니안 데드리프트", duration: "3세트 (10회)", type: "후면 사슬", icon: "fa-dumbbell" },
+                    { name: "무릎 대고 푸시업 & 딥스", duration: "3세트 (10~12회)", type: "상체 근력", icon: "fa-hand-fist" },
+                    { name: "가벼운 워밍업 파워 워킹", duration: "15분", type: "유산소", icon: "fa-person-walking" }
+                ]
+            },
+            normal: {
+                notice: "⚡ [전신 심폐 & 근력 유지 마스터 루틴]: 근력과 심폐 지구력을 균형 있게 발달시키는 복합 루틴입니다.",
+                tip: "주 3~4회 근력 운동과 주 2회 고강도/중강도 유산소 운동을 적절히 교대로 실시하세요.",
+                burnTarget: "350~450 kcal",
+                list: [
+                    { name: "바벨/덤벨 스쿼트", duration: "4세트 (10~12회)", type: "하체", icon: "fa-child" },
+                    { name: "플랭크 & 코어 홀드", duration: "1분 x 3세트", type: "코어", icon: "fa-shield-halved" },
+                    { name: "인클라인 런닝머신 / 인터벌 러닝", duration: "25분", type: "유산소", icon: "fa-person-running" },
+                    { name: "덤벨 숄더 프레스 & 오버헤드 Press", duration: "3세트 (12회)", type: "어깨/상체", icon: "fa-dumbbell" }
+                ]
+            },
+            overweight: {
+                notice: "🔥 [체지방 집중 연소 & 관절 보호 루틴]: 관절 충격을 줄이면서 칼로리 소비를 극대화합니다.",
+                tip: "무릎 관절 부담을 완화하기 위해 경사도 걷기나 실내 자전거, 수영을 활용하면 좋습니다.",
+                burnTarget: "400~500 kcal",
+                list: [
+                    { name: "경사도 5~8% 속보 (인클라인 워킹)", duration: "35분", type: "유산소", icon: "fa-person-walking" },
+                    { name: "케틀벨/덤벨 고블렛 스쿼트", duration: "3세트 (15회)", type: "전신 유산소성 근력", icon: "fa-dumbbell" },
+                    { name: "실내 인터벌 사이클", duration: "20분", type: "하체 유산소", icon: "fa-bicycle" },
+                    { name: "케이블 랫풀다운 & 로우", duration: "3세트 (15회)", type: "등/상체", icon: "fa-bars" }
+                ]
+            },
+            obese: {
+                notice: "🛡️ [저충격 대사 촉진 & 관절 안전 프로토콜]: 체중 부하를 줄이고 혈당과 대사를 개선하는 운동입니다.",
+                tip: "처음부터 과도하게 달리지 말고, 매일 지속 가능한 30분 이상의 평지 걷기와 의자 스쿼트부터 시작하세요.",
+                burnTarget: "300~400 kcal",
+                list: [
+                    { name: "평지 속보 또는 야외 산책", duration: "40분", type: "저임팩트 유산소", icon: "fa-shoe-prints" },
+                    { name: "의자 잡고 스쿼트 (체어 스쿼트)", duration: "3세트 (10회)", type: "하체 지지", icon: "fa-chair" },
+                    { name: "앉아서 하는 덤벨 암컬 & 프레스", duration: "3세트 (15회)", type: "상체 토닝", icon: "fa-dumbbell" },
+                    { name: "전신 관절 가동성 스트레칭", duration: "15분", type: "유연성", icon: "fa-spa" }
+                ]
+            }
+        };
+
+        let currentWeek = 1;
+        let selectedDay = 1;
+        let currentBmiCategory = "normal";
+
+        // Tab Switch Function for Left Panel (Food DB vs Restaurants)
+        function switchLeftTab(tab) {
+            const foodSec = document.getElementById('foodSearchSection');
+            const restSec = document.getElementById('restaurantSection');
+            const foodBtn = document.getElementById('tabFoodBtn');
+            const restBtn = document.getElementById('tabRestBtn');
+
+            if (tab === 'food') {
+                foodSec.classList.remove('hidden');
+                restSec.classList.add('hidden');
+                foodBtn.className = "vintage-btn text-[11px] px-2.5 py-1";
+                restBtn.className = "vintage-btn text-[11px] px-2.5 py-1 bg-[#ede2d8] text-[#3d2b1f]";
+            } else {
+                foodSec.classList.add('hidden');
+                restSec.classList.remove('hidden');
+                foodBtn.className = "vintage-btn text-[11px] px-2.5 py-1 bg-[#ede2d8] text-[#3d2b1f]";
+                restBtn.className = "vintage-btn text-[11px] px-2.5 py-1";
+            }
+        }
+
+        // Initialize App on Load
+        window.onload = function() {
+            renderDayTabs();
+            calculateNutrition();
+            renderRestaurants('all');
+        };
+
+        // Render Restaurant List filtered by region
+        function renderRestaurants(regionFilter) {
+            const container = document.getElementById('restaurantList');
+            container.innerHTML = '';
+
+            const list = regionFilter === 'all' 
+                ? regionalRestaurants 
+                : regionalRestaurants.filter(r => r.region === regionFilter);
+
+            list.forEach(r => {
+                const card = document.createElement('div');
+                card.className = "p-2.5 bg-[#f4eae1] border border-[#b8987d] rounded-sm space-y-1 hover:border-[#5a3e2b] transition-all";
+                
+                let iconClass = "fa-utensils";
+                if(r.category === "흑돼지" || r.category === "구이") iconClass = "fa-drumstick-bite";
+                if(r.category === "국수" || r.category === "분식") iconClass = "fa-bowl-rice";
+                if(r.category === "해산물") iconClass = "fa-fish";
+                if(r.category === "매콤") iconClass = "fa-pepper-hot";
+                if(r.category === "한정식" || r.category === "한식") iconClass = "fa-plate-wheat";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-[#d6c0b0] pb-1">
+                        <div class="flex items-center space-x-1.5 font-bold text-[#3d2b1f]">
+                            <i class="fa-solid ${iconClass} text-[#8c674b]"></i>
+                            <span class="text-xs font-extrabold">${r.name}</span>
+                        </div>
+                        <span class="text-[9px] bg-[#e8dad0] text-[#6e5038] border border-[#a88265] px-1.5 py-0.5 rounded-xs font-bold">[${r.region}] ${r.address}</span>
+                    </div>
+                    <div class="text-[11px] text-[#6e5038] font-bold">
+                        <i class="fa-solid fa-square-check text-[10px] mr-1"></i>주요 메뉴: <span class="text-[#3d2b1f] font-semibold">${r.menu}</span>
+                    </div>
+                    <p class="text-[10px] text-[#5a3e2b] leading-tight bg-[#fcf7f2] p-1.5 border border-[#e8dad0] rounded-xs mt-1">
+                        ${r.desc}
+                    </p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterRegion(reg) {
+            renderRestaurants(reg);
+        }
+
+        // Calculate BMI & Nutrition Targets
+        function calculateNutrition(e) {
+            if(e) e.preventDefault();
+
+            const h = parseFloat(document.getElementById('height').value) || 175;
+            const w = parseFloat(document.getElementById('weight').value) || 70;
+            const age = parseInt(document.getElementById('age').value) || 30;
+            const gender = document.getElementById('gender').value;
+            const activity = parseFloat(document.getElementById('activity').value) || 1.375;
+
+            // BMI Calculation
+            const bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
+            
+            // Determine BMI Category & Position on Gauge
+            let bmiText = "";
+            let pointerPercent = 0;
+            let rankText = "레벨 1 클래식 탐험가";
+
+            if (bmi < 18.5) {
+                bmiText = "저체중 상태";
+                pointerPercent = Math.max(5, (bmi / 18.5) * 20);
+                rankText = "레벨 1 체력 회복가";
+                currentBmiCategory = "underweight";
+            } else if (bmi >= 18.5 && bmi <= 22.9) {
+                bmiText = "정상 범위";
+                pointerPercent = 20 + ((bmi - 18.5) / (22.9 - 18.5)) * 25;
+                rankText = "레벨 5 건강 마스터";
+                currentBmiCategory = "normal";
+            } else if (bmi >= 23.0 && bmi <= 24.9) {
+                bmiText = "과체중 상태";
+                pointerPercent = 45 + ((bmi - 23.0) / (24.9 - 23.0)) * 20;
+                rankText = "레벨 3 식단 도전자";
+                currentBmiCategory = "overweight";
+            } else {
+                bmiText = "비만 상태";
+                pointerPercent = Math.min(95, 65 + ((bmi - 25.0) / 10) * 30);
+                rankText = "레벨 2 대사 개조가";
+                currentBmiCategory = "obese";
+            }
+
+            // Update BMI UI & Pointer Position
+            document.getElementById('bmiScoreText').innerText = bmi;
+            document.getElementById('bmiStatusTitle').innerText = bmiText;
+            document.getElementById('bmiPointer').style.left = `${pointerPercent}%`;
+            document.getElementById('playerRank').innerText = rankText;
+
+            // BMR (Mifflin-St Jeor)
+            let bmr = (10 * w) + (6.25 * h) - (5 * age);
+            bmr = gender === 'male' ? bmr + 5 : bmr - 161;
+            bmr = Math.round(bmr);
+
+            // TDEE Adjustments based on Goal
+            let tdee = Math.round(bmr * activity);
+            if(currentBmiCategory === "underweight") tdee += 300; // Calorie surplus
+            if(currentBmiCategory === "overweight") tdee -= 300;  // Calorie deficit
+            if(currentBmiCategory === "obese") tdee -= 500;       // Aggressive deficit
+
+            // Targets
+            const proteinTargetGrams = Math.round(w * (currentBmiCategory === 'obese' ? 2.0 : 1.6));
+            const waterLiters = ((w * 35) / 1000).toFixed(1);
+
+            let carbRatio = currentBmiCategory === 'underweight' ? 0.55 : (currentBmiCategory === 'obese' ? 0.35 : 0.45);
+            let proteinRatio = currentBmiCategory === 'obese' ? 0.35 : 0.30;
+            let fatRatio = 1.0 - (carbRatio + proteinRatio);
+
+            const minCarb = Math.round((tdee * carbRatio) / 4);
+            const maxCarb = Math.round((tdee * (carbRatio + 0.05)) / 4);
+            const minProtein = Math.round((tdee * proteinRatio) / 4);
+            const maxProtein = Math.round((tdee * (proteinRatio + 0.05)) / 4);
+            const minFat = Math.round((tdee * fatRatio) / 9);
+            const maxFat = Math.round((tdee * (fatRatio + 0.05)) / 9);
+
+            // Update UI Stats
+            document.getElementById('bmrValue').innerText = `${bmr.toLocaleString()} kcal`;
+            document.getElementById('tdeeValue').innerText = `${tdee.toLocaleString()} kcal`;
+            document.getElementById('proteinTarget').innerText = `${proteinTargetGrams}g`;
+            document.getElementById('waterTarget').innerText = `${waterLiters} L`;
+
+            document.getElementById('carbGrams').innerText = `${minCarb}g ~ ${maxCarb}g`;
+            document.getElementById('proteinGrams').innerText = `${minProtein}g ~ ${maxProtein}g`;
+            document.getElementById('fatGrams').innerText = `${minFat}g ~ ${maxFat}g`;
+
+            document.getElementById('carbBar').style.width = `${carbRatio * 100}%`;
+            document.getElementById('proteinBar').style.width = `${proteinRatio * 100}%`;
+            document.getElementById('fatBar').style.width = `${fatRatio * 100}%`;
+
+            document.getElementById('selectedDayCalories').innerText = `목표: ${tdee.toLocaleString()} kcal`;
+
+            // Refresh Meal Plan & Workout Plan according to BMI Category
+            renderMeals(selectedDay);
+            renderWorkouts();
+        }
+
+        // Render Recommended Workouts based on BMI Category
+        function renderWorkouts() {
+            const workoutData = workoutsByBmi[currentBmiCategory];
+            if (!workoutData) return;
+
+            document.getElementById('workoutNotice').innerText = workoutData.notice;
+            document.getElementById('workoutTipText').innerText = `💡 [운동 가이드]: ${workoutData.tip}`;
+            document.getElementById('targetWorkoutBurn').innerText = `소모 목표: ${workoutData.burnTarget}`;
+
+            const container = document.getElementById('workoutListContainer');
+            container.innerHTML = '';
+
+            workoutData.list.forEach(w => {
+                const item = document.createElement('div');
+                item.className = "p-2.5 bg-[#f4eae1] border border-[#b8987d] rounded-sm flex items-center justify-between hover:border-[#5a3e2b] transition-all";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-7 h-7 bg-[#ede2d8] border border-[#8c674b] rounded-full flex items-center justify-center text-[#6e5038] shrink-0">
+                            <i class="fa-solid ${w.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-[#3d2b1f] text-xs">${w.name}</div>
+                            <span class="text-[10px] text-[#6e5038] font-semibold">${w.type}</span>
+                        </div>
+                    </div>
+                    <span class="typewriter-font text-[11px] font-bold text-[#3d2b1f] bg-[#fcf7f2] px-2 py-1 border border-[#a88265] rounded-xs">${w.duration}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Set Active Week
+        function setWeek(weekNum) {
+            currentWeek = weekNum;
+            for(let i=1; i<=4; i++) {
+                const btn = document.getElementById(`w${i}Btn`);
+                if(i === weekNum) {
+                    btn.className = "vintage-btn text-[11px] px-2 py-1 bg-[#6e5038] text-[#fcf7f2]";
+                } else {
+                    btn.className = "vintage-btn text-[11px] px-2 py-1 bg-[#ede2d8] text-[#3d2b1f]";
+                }
+            }
+            renderDayTabs();
+            selectDay((weekNum - 1) * 7 + 1);
+        }
+
+        // Render Day Selector
+        function renderDayTabs() {
+            const container = document.getElementById('dayTabs');
+            container.innerHTML = '';
+            
+            const startDay = (currentWeek - 1) * 7 + 1;
+            const endDay = Math.min(startDay + 6, 30);
+
+            for (let d = startDay; d <= endDay; d++) {
+                const btn = document.createElement('button');
+                btn.onclick = () => selectDay(d);
+                btn.id = `day-btn-${d}`;
+                
+                if (d === selectedDay) {
+                    btn.className = "vintage-btn bg-[#8c674b] text-[#fcf7f2] font-bold whitespace-nowrap px-2.5 py-1 text-[11px]";
+                } else {
+                    btn.className = "vintage-btn bg-[#ede2d8] text-[#3d2b1f] whitespace-nowrap px-2.5 py-1 text-[11px]";
+                }
+                btn.innerText = `${d}일차`;
+                container.appendChild(btn);
+            }
+        }
+
+        function selectDay(dayNum) {
+            selectedDay = dayNum;
+            renderDayTabs();
+            renderMeals(dayNum);
+        }
+
+        // Render Day Meal Log based on BMI Category
+        function renderMeals(dayNum) {
+            document.getElementById('selectedDayTitle').innerText = `${dayNum}일차 추천 맞춤 식단`;
+
+            const categoryData = mealPlansByBmi[currentBmiCategory];
+            document.getElementById('dietStrategyNotice').innerText = categoryData.notice;
+            document.getElementById('questTipText').innerText = `💡 [클래식 식단 지침]: ${categoryData.tip}`;
+
+            const sets = categoryData.sets;
+            const currentSet = sets[(dayNum - 1) % sets.length];
+
+            const buildListHtml = (items) => {
+                return items.map(item => `
+                    <li class="flex justify-between items-center bg-[#f4eae1] p-1.5 border border-[#b8987d] rounded-sm">
+                        <span class="text-[#3d2b1f] font-bold">${item.name}</span>
+                        <span class="typewriter-font text-[#6e5038] font-bold text-[11px]">${item.amount}</span>
+                    </li>
+                `).join('');
+            };
+
+            document.getElementById('meal-1').innerHTML = buildListHtml(currentSet.m1);
+            document.getElementById('meal-2').innerHTML = buildListHtml(currentSet.m2);
+            document.getElementById('meal-3').innerHTML = buildListHtml(currentSet.m3);
+        }
+
+        // Food Database Search Logic
+        function searchFood() {
+            const query = document.getElementById('foodQuery').value.trim();
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (!query) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            const filtered = foodDatabase.filter(item => item.name.includes(query));
+
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="p-2 text-center text-[#8c674b] bg-[#f4eae1] border border-[#b8987d] rounded-sm font-semibold">
+                        해당 식품 정보를 백과사전에서 찾을 수 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const el = document.createElement('div');
+                el.className = "p-2 bg-[#f4eae1] border border-[#b8987d] flex justify-between items-center hover:border-[#3d2b1f] transition-colors rounded-sm";
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold text-[#3d2b1f]">${item.name} <span class="text-[10px] text-[#6e5038] font-normal">(${item.gram})</span></div>
+                        <div class="text-[10px] text-[#6e5038] mt-0.5">
+                            탄수화물: <span class="typewriter-font font-bold text-[#3d2b1f]">${item.carb}g</span> | 
+                            단백질: <span class="typewriter-font font-bold text-[#3d2b1f]">${item.protein}g</span> | 
+                            지방: <span class="typewriter-font font-bold text-[#3d2b1f]">${item.fat}g</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="typewriter-font font-bold text-[#3d2b1f] text-sm">${item.kcal}</span> <span class="text-[9px] text-[#6e5038]">kcal</span>
+                    </div>
+                `;
+                resultsContainer.appendChild(el);
+            });
+        }
+
+        function quickSearch(keyword) {
+            document.getElementById('foodQuery').value = keyword;
+            searchFood();
+        }
+
+        function resetData() {
+            document.getElementById('height').value = 175;
+            document.getElementById('weight').value = 70;
+            document.getElementById('age').value = 30;
+            document.getElementById('gender').value = 'male';
+            document.getElementById('activity').value = '1.375';
+            document.getElementById('foodQuery').value = '';
+            document.getElementById('searchResults').classList.add('hidden');
+            calculateNutrition();
+        }
+    </script>
+</body>
+</html>
