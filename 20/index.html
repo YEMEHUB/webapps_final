@@ -1,1 +1,683 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>심플 맞춤 식단 & 운동 플래너</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <i class="fa-solid fa-leaf text-emerald-400 text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 tracking-tight">AI FitPlan</h1>
+                    <p class="text-[11px] text-slate-500 font-normal">맞춤형 식단 & 운동 솔루션</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('apiSearch')" class="text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400"></i> 식약처 DB
+                </button>
+                <button onclick="resetForm()" class="text-xs font-medium text-slate-500 hover:text-slate-800 p-2 rounded-lg transition" title="초기화">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+        
+        <!-- Top Info Banner -->
+        <div class="mb-6 bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3 text-xs text-emerald-900">
+            <i class="fa-solid fa-circle-info text-emerald-600 text-base shrink-0"></i>
+            <p class="leading-relaxed">
+                정확한 식단 및 영양 권장량 계산을 위해 <strong class="font-semibold text-emerald-950">성별, 나이, 키, 현재 몸무게</strong>를 사실대로 정확히 입력해 주세요.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Side: Profile Input Form (lg:col-span-4) -->
+            <section class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit">
+                <div class="mb-5 pb-3 border-b border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-regular fa-id-card text-emerald-600"></i> 신체 프로필 입력
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">기본 정보를 입력하시면 AI가 분석합니다.</p>
+                </div>
+
+                <form id="healthForm" onsubmit="event.preventDefault(); generateAIPlan();" class="space-y-4">
+                    
+                    <!-- Gender & Age -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">성별</label>
+                            <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl">
+                                <label class="text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer transition select-none" id="gender-male-label">
+                                    <input type="radio" name="gender" value="male" checked class="hidden" onchange="updateGenderUI()"> 남성
+                                </label>
+                                <label class="text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer transition select-none" id="gender-female-label">
+                                    <input type="radio" name="gender" value="female" class="hidden" onchange="updateGenderUI()"> 여성
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">나이</label>
+                            <div class="relative">
+                                <input type="number" id="age" min="5" max="100" value="25" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-slate-50/50">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400">세</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Height & Weight -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">신장 (키)</label>
+                            <div class="relative">
+                                <input type="number" id="height" step="0.1" min="80" max="230" value="173" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-slate-50/50">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400">cm</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">체중 (몸무게)</label>
+                            <div class="relative">
+                                <input type="number" id="weight" step="0.1" min="20" max="250" value="68" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-slate-50/50">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400">kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal & Target Height -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">목표 설정</label>
+                            <select id="dietGoal" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-white font-medium">
+                                <option value="maintain">체중 유지</option>
+                                <option value="lose">체중 감량</option>
+                                <option value="gain">근육 증량</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">목표 키 <span class="text-[10px] text-slate-400">(선택)</span></label>
+                            <div class="relative">
+                                <input type="number" id="targetHeight" step="0.1" placeholder="희망 키" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-slate-50/50">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400">cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Level -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">평소 활동량</label>
+                        <select id="activity" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-white font-medium">
+                            <option value="1.2">낮음 (주로 앉아서 생활)</option>
+                            <option value="1.375" selected>보통 (주 1~3회 가벼운 운동)</option>
+                            <option value="1.55">활동적 (주 3~5회 적당한 운동)</option>
+                            <option value="1.725">매우 활동적 (주 6~7회 강한 운동)</option>
+                        </select>
+                    </div>
+
+                    <!-- Preferences / Allergy -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">제외 식품 / 알레르기</label>
+                        <input type="text" id="userPreferences" placeholder="예: 오이 못먹음, 우유 알레르기" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none bg-slate-50/50">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn" class="w-full mt-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                        <span>AI 맞춤 플랜 생성하기</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Side: Analysis & AI Plan Results (lg:col-span-8) -->
+            <section class="lg:col-span-8 space-y-6">
+
+                <!-- 1. Body Metrics Overview -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-600"></i> 분석 결과 & 영양 가이드
+                        </h3>
+                        <span id="bmiBadge" class="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            측정 대기
+                        </span>
+                    </div>
+
+                    <!-- Stat Cards Grid -->
+                    <div class="grid grid-cols-3 gap-3 text-center mb-5">
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[11px] text-slate-400 font-medium block">BMI (체질량지수)</span>
+                            <span id="bmiValue" class="text-lg font-bold text-slate-900 mt-0.5 block">-</span>
+                            <span id="bmiCategory" class="text-[10px] text-slate-500 block">-</span>
+                        </div>
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[11px] text-slate-400 font-medium block">기초대사량 (BMR)</span>
+                            <span id="bmrValue" class="text-lg font-bold text-slate-900 mt-0.5 block">-</span>
+                            <span class="text-[10px] text-slate-400 block">kcal / 일</span>
+                        </div>
+                        <div class="p-3.5 bg-slate-900 text-white rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-400 font-medium block">목표 권장 칼로리</span>
+                            <span id="targetCalories" class="text-lg font-bold text-emerald-400 mt-0.5 block">-</span>
+                            <span class="text-[10px] text-slate-400 block">kcal / 일</span>
+                        </div>
+                    </div>
+
+                    <!-- Macro Nutrient Breakdown -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                        <div class="sm:col-span-4 h-28 flex justify-center items-center">
+                            <canvas id="macroChart"></canvas>
+                        </div>
+                        <div class="sm:col-span-8 space-y-2 text-xs">
+                            <div class="font-medium text-slate-700 text-xs mb-1">일일 3대 영양소 권장량</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                    <div class="text-[10px] text-slate-400 font-medium">탄수화물</div>
+                                    <div id="carbsGram" class="font-bold text-slate-800 text-xs mt-0.5">0g</div>
+                                </div>
+                                <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                    <div class="text-[10px] text-slate-400 font-medium">단백질</div>
+                                    <div id="proteinGram" class="font-bold text-slate-800 text-xs mt-0.5">0g</div>
+                                </div>
+                                <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                    <div class="text-[10px] text-slate-400 font-medium">지방</div>
+                                    <div id="fatGram" class="font-bold text-slate-800 text-xs mt-0.5">0g</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. AI Plan Container with Clean Tabs -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    
+                    <!-- Navigation Tabs -->
+                    <div class="flex border-b border-slate-200 bg-slate-50/50">
+                        <button onclick="switchTab('diet')" id="tabBtnDiet" class="flex-1 py-3 text-center font-medium text-xs text-slate-900 border-b-2 border-slate-900 bg-white transition">
+                            7일 식단 플랜
+                        </button>
+                        <button onclick="switchTab('workout')" id="tabBtnWorkout" class="flex-1 py-3 text-center font-medium text-xs text-slate-500 hover:text-slate-900 transition">
+                            추천 운동 루틴
+                        </button>
+                        <button onclick="switchTab('apiSearch')" id="tabBtnApiSearch" class="flex-1 py-3 text-center font-medium text-xs text-slate-500 hover:text-slate-900 transition">
+                            식약처 DB 검색
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: AI Diet -->
+                    <div id="tabContentDiet" class="p-5">
+                        
+                        <!-- AI Loading State -->
+                        <div id="aiLoading" class="hidden py-12 text-center">
+                            <i class="fa-solid fa-circle-notch animate-spin text-2xl text-slate-400 mb-3"></i>
+                            <p class="text-xs font-medium text-slate-700">Gemini AI가 입력 정보를 바탕으로 최적의 플랜을 구성하고 있습니다...</p>
+                        </div>
+
+                        <!-- AI Advice Box -->
+                        <div id="aiAdviceCard" class="hidden mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 leading-relaxed">
+                            <div class="flex items-center gap-2 mb-1 text-slate-900 font-semibold">
+                                <i class="fa-solid fa-comment-dots text-emerald-600"></i>
+                                <span>영양 전문가 피드백</span>
+                            </div>
+                            <div id="aiAdviceText" class="text-slate-600 font-normal mt-1"></div>
+                        </div>
+
+                        <div id="dietScheduleList" class="space-y-3">
+                            <!-- AI Generated Diet Content -->
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: AI Workout -->
+                    <div id="tabContentWorkout" class="p-5 hidden">
+                        <div id="workoutScheduleList" class="space-y-3">
+                            <!-- AI Generated Workout Content -->
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Food DB Search -->
+                    <div id="tabContentApiSearch" class="p-5 hidden">
+                        <div class="mb-4">
+                            <h4 class="text-xs font-bold text-slate-900">식품의약품안전처 영양성분 DB</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">공공 DB에서 정확한 영양 데이터를 조회할 수 있습니다.</p>
+                        </div>
+
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="foodSearchInput" placeholder="식품명 입력 (예: 닭가슴살, 샐러드)" class="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:outline-none" onkeyup="if(event.key==='Enter') searchFoodDB()">
+                            <button onclick="searchFoodDB()" class="px-4 py-2 bg-slate-900 text-white font-medium text-xs rounded-xl hover:bg-slate-800 transition shrink-0">
+                                검색
+                            </button>
+                        </div>
+
+                        <div id="foodSearchResults" class="space-y-2">
+                            <div class="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                <p class="text-xs">궁금한 음식 이름을 검색해보세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Disclaimer Note -->
+                <p class="text-[11px] text-slate-400 leading-relaxed px-1">
+                    * 본 서비스에서 제공하는 BMI 수치, AI 자동 생성 식단 및 운동 계획은 건강 관리를 돕기 위한 보조용 참조 자료입니다. 전문적인 의학적 진단이나 처방이 필요한 경우 의료 전문가와 상의하십시오.
+                </p>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-5 text-center text-xs text-slate-400 font-normal">
+        <p>FitPlan Planner &copy; 2026. Powered by Gemini AI & 식약처 식품영양성분 DB</p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        let macroChartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateGenderUI();
+            generateAIPlan();
+        });
+
+        function updateGenderUI() {
+            const isMale = document.querySelector('input[name="gender"]:checked').value === 'male';
+            const maleLabel = document.getElementById('gender-male-label');
+            const femaleLabel = document.getElementById('gender-female-label');
+
+            if (isMale) {
+                maleLabel.className = "text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer bg-white text-slate-900 shadow-sm border border-slate-200/60";
+                femaleLabel.className = "text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer text-slate-400 hover:text-slate-600";
+            } else {
+                femaleLabel.className = "text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer bg-white text-slate-900 shadow-sm border border-slate-200/60";
+                maleLabel.className = "text-center py-1.5 text-xs font-medium rounded-lg cursor-pointer text-slate-400 hover:text-slate-600";
+            }
+        }
+
+        function calculateMetrics() {
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const age = parseFloat(document.getElementById('age').value) || 25;
+            const height = parseFloat(document.getElementById('height').value) || 170;
+            const weight = parseFloat(document.getElementById('weight').value) || 65;
+            const goal = document.getElementById('dietGoal').value;
+            const activity = parseFloat(document.getElementById('activity').value);
+
+            const heightM = height / 100;
+            const bmi = weight / (heightM * heightM);
+            let bmiStatus = "", bmiBadgeColor = "";
+
+            if (bmi < 18.5) {
+                bmiStatus = "저체중";
+                bmiBadgeColor = "bg-sky-50 text-sky-700 border-sky-200";
+            } else if (bmi < 23) {
+                bmiStatus = "정상 체중";
+                bmiBadgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+            } else if (bmi < 25) {
+                bmiStatus = "과체중";
+                bmiBadgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+            } else {
+                bmiStatus = "비만";
+                bmiBadgeColor = "bg-rose-50 text-rose-700 border-rose-200";
+            }
+
+            document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+            document.getElementById('bmiCategory').textContent = bmiStatus;
+            document.getElementById('bmiBadge').textContent = bmiStatus;
+            document.getElementById('bmiBadge').className = `px-2.5 py-1 text-xs font-medium rounded-full border ${bmiBadgeColor}`;
+
+            let bmr = (gender === 'male') 
+                ? (10 * weight) + (6.25 * height) - (5 * age) + 5
+                : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+
+            const tdee = bmr * activity;
+            let targetCal = tdee;
+
+            if (goal === 'lose') targetCal -= 400;
+            else if (goal === 'gain') targetCal += 400;
+
+            const finalTargetCal = Math.round(targetCal);
+
+            document.getElementById('bmrValue').textContent = Math.round(bmr).toLocaleString();
+            document.getElementById('targetCalories').textContent = finalTargetCal.toLocaleString();
+
+            let cRatio = 0.5, pRatio = 0.3, fRatio = 0.2;
+            if (goal === 'lose') { cRatio = 0.4; pRatio = 0.4; fRatio = 0.2; }
+            if (goal === 'gain') { cRatio = 0.55; pRatio = 0.25; fRatio = 0.2; }
+
+            const carbsG = Math.round((finalTargetCal * cRatio) / 4);
+            const proteinG = Math.round((finalTargetCal * pRatio) / 4);
+            const fatG = Math.round((finalTargetCal * fRatio) / 9);
+
+            document.getElementById('carbsGram').textContent = `${carbsG}g (${Math.round(cRatio*100)}%)`;
+            document.getElementById('proteinGram').textContent = `${proteinG}g (${Math.round(pRatio*100)}%)`;
+            document.getElementById('fatGram').textContent = `${fatG}g (${Math.round(fRatio*100)}%)`;
+
+            renderMacroChart(carbsG * 4, proteinG * 4, fatG * 9);
+
+            return { gender, age, height, weight, goal, bmi, bmiStatus, bmr, finalTargetCal, carbsG, proteinG, fatG };
+        }
+
+        function renderMacroChart(cCal, pCal, fCal) {
+            const ctx = document.getElementById('macroChart').getContext('2d');
+            if (macroChartInstance) macroChartInstance.destroy();
+
+            macroChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['탄수화물', '단백질', '지방'],
+                    datasets: [{
+                        data: [cCal, pCal, fCal],
+                        backgroundColor: ['#0f172a', '#10b981', '#cbd5e1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        async function generateAIPlan() {
+            const metrics = calculateMetrics();
+            const targetHeightVal = document.getElementById('targetHeight').value;
+            const preferences = document.getElementById('userPreferences').value.trim();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const aiLoading = document.getElementById('aiLoading');
+            const dietContainer = document.getElementById('dietScheduleList');
+            const workoutContainer = document.getElementById('workoutScheduleList');
+            const aiAdviceCard = document.getElementById('aiAdviceCard');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> 플랜 분석 중...`;
+            aiLoading.classList.remove('hidden');
+            dietContainer.innerHTML = '';
+            aiAdviceCard.classList.add('hidden');
+
+            const systemPrompt = "너는 전문적인 피트니스 및 영양 관리사이다. 사용자의 신체 조건과 목표에 따른 과학적인 7일 식단 및 운동 플랜을 JSON 형식으로 작성해야 한다. 군더더기 없이 깔끔하고 명확하게 안내하라.";
+            
+            const userQuery = `
+사용자의 신체 정보:
+- 성별: ${metrics.gender === 'male' ? '남성' : '여성'}
+- 나이: ${metrics.age}세
+- 키: ${metrics.height}cm / 몸무게: ${metrics.weight}kg (BMI: ${metrics.bmi.toFixed(1)}, ${metrics.bmiStatus})
+- 목표: ${metrics.goal === 'lose' ? '체중 감량' : metrics.goal === 'gain' ? '근육 증량' : '체중 유지'}
+- 목표 키: ${targetHeightVal ? targetHeightVal + 'cm' : '없음'}
+- 목표 칼로리: ${metrics.finalTargetCal} kcal (탄수화물: ${metrics.carbsG}g, 단백질: ${metrics.proteinG}g, 지방: ${metrics.fatG}g)
+- 식단 요구사항: ${preferences || '없음'}
+
+위 정보를 바탕으로 다음 구조의 정확한 JSON으로만 응답해줘:
+{
+  "advice": "사용자를 위한 실용적인 맞춤 영양 조언 (2문장)",
+  "weeklyDiet": [
+    {
+      "day": "월요일",
+      "totalCalories": 1900,
+      "breakfast": {"menu": "메뉴 구성", "calories": 450},
+      "lunch": {"menu": "메뉴 구성", "calories": 700},
+      "dinner": {"menu": "메뉴 구성", "calories": 600},
+      "snack": {"menu": "메뉴 (선택)", "calories": 150}
+    }
+  ],
+  "workoutPlan": [
+    {
+      "title": "운동 항목명",
+      "frequency": "주 N회 / 시간",
+      "description": "상세 운동 루틴 가이드"
+    }
+  ]
+}
+`;
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) throw new Error("AI 응답을 받아올 수 없습니다.");
+
+                const aiData = JSON.parse(jsonText);
+
+                document.getElementById('aiAdviceText').textContent = aiData.advice;
+                aiAdviceCard.classList.remove('hidden');
+
+                renderAIDiet(aiData.weeklyDiet, dietContainer);
+                renderAIWorkout(aiData.workoutPlan, workoutContainer);
+
+            } catch (err) {
+                console.error(err);
+                dietContainer.innerHTML = `
+                    <div class="p-4 text-center text-rose-600 bg-rose-50 rounded-xl border border-rose-200 text-xs">
+                        오류가 발생했습니다. 다시 시도해 주세요.
+                    </div>
+                `;
+            } finally {
+                aiLoading.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i> <span>AI 맞춤 플랜 생성하기</span>`;
+            }
+        }
+
+        function renderAIDiet(weeklyDiet, container) {
+            if (!weeklyDiet || weeklyDiet.length === 0) return;
+
+            let html = '';
+            weeklyDiet.forEach(dayPlan => {
+                html += `
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200/80">
+                            <span class="font-bold text-slate-900">${dayPlan.day} 식단</span>
+                            <span class="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                총 ${dayPlan.totalCalories || '-'} kcal
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                                    <span>아침</span>
+                                    <span>${dayPlan.breakfast?.calories || ''} kcal</span>
+                                </div>
+                                <p class="text-slate-800 font-medium">${dayPlan.breakfast?.menu || '-'}</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                                    <span>점심</span>
+                                    <span>${dayPlan.lunch?.calories || ''} kcal</span>
+                                </div>
+                                <p class="text-slate-800 font-medium">${dayPlan.lunch?.menu || '-'}</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                                    <span>저녁 ${dayPlan.snack?.menu ? '& 간식' : ''}</span>
+                                    <span>${(dayPlan.dinner?.calories || 0) + (dayPlan.snack?.calories || 0)} kcal</span>
+                                </div>
+                                <p class="text-slate-800 font-medium">${dayPlan.dinner?.menu || '-'}</p>
+                                ${dayPlan.snack?.menu ? `<p class="text-emerald-600 mt-1 text-[10px]">+ 간식: ${dayPlan.snack.menu}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderAIWorkout(workoutPlan, container) {
+            if (!workoutPlan || workoutPlan.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">운동 정보가 없습니다.</div>`;
+                return;
+            }
+
+            container.innerHTML = workoutPlan.map(w => `
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <h5 class="font-bold text-slate-900">${w.title}</h5>
+                        <span class="text-[10px] font-medium text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">${w.frequency}</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">${w.description}</p>
+                </div>
+            `).join('');
+        }
+
+        function switchTab(tab) {
+            const btnDiet = document.getElementById('tabBtnDiet');
+            const btnWorkout = document.getElementById('tabBtnWorkout');
+            const btnApiSearch = document.getElementById('tabBtnApiSearch');
+            
+            const contentDiet = document.getElementById('tabContentDiet');
+            const contentWorkout = document.getElementById('tabContentWorkout');
+            const contentApiSearch = document.getElementById('tabContentApiSearch');
+
+            [btnDiet, btnWorkout, btnApiSearch].forEach(b => {
+                b.className = "flex-1 py-3 text-center font-medium text-xs text-slate-500 hover:text-slate-900 transition";
+            });
+            [contentDiet, contentWorkout, contentApiSearch].forEach(c => c.classList.add('hidden'));
+
+            if (tab === 'diet') {
+                btnDiet.className = "flex-1 py-3 text-center font-medium text-xs text-slate-900 border-b-2 border-slate-900 bg-white transition";
+                contentDiet.classList.remove('hidden');
+            } else if (tab === 'workout') {
+                btnWorkout.className = "flex-1 py-3 text-center font-medium text-xs text-slate-900 border-b-2 border-slate-900 bg-white transition";
+                contentWorkout.classList.remove('hidden');
+            } else {
+                btnApiSearch.className = "flex-1 py-3 text-center font-medium text-xs text-slate-900 border-b-2 border-slate-900 bg-white transition";
+                contentApiSearch.classList.remove('hidden');
+            }
+        }
+
+        async function searchFoodDB() {
+            const query = document.getElementById('foodSearchInput').value.trim();
+            const resultsContainer = document.getElementById('foodSearchResults');
+
+            if (!query) return;
+
+            resultsContainer.innerHTML = `
+                <div class="p-6 text-center text-slate-500 bg-slate-50 rounded-xl text-xs">
+                    '${query}' 정보 검색 중...
+                </div>
+            `;
+
+            try {
+                const API_URL = 'https://glittery-dasik-3cb269.netlify.app/api/food';
+                const url = new URL(API_URL);
+                url.search = new URLSearchParams({ pageNo: '1', numOfRows: '20', type: 'json', FOOD_NM_KR: query });
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+                const data = await response.json();
+
+                if (data?.header?.resultCode === '03' || !data?.body?.items || data.body.items.length === 0) {
+                    resultsContainer.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">'${query}'에 대한 식약처 DB 검색 결과가 없습니다.</div>`;
+                    return;
+                }
+
+                renderFoodSearchResults(data.body.items, resultsContainer);
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `<div class="p-4 text-center text-rose-500 text-xs">DB 조회 중 오류가 발생했습니다.</div>`;
+            }
+        }
+
+        function parseNutrientValue(val) {
+            if (val === null || val === undefined || val === '') return null;
+            const parsed = parseFloat(String(val).replace(/,/g, '').trim());
+            return isNaN(parsed) ? null : parsed;
+        }
+
+        function renderFoodSearchResults(items, container) {
+            let html = `<div class="space-y-2 max-h-[380px] overflow-y-auto pr-1">`;
+            
+            items.forEach(item => {
+                const name = item.FOOD_NM_KR || '식품명 미상';
+                const serving = item.SERVING_SIZE || '1회 제공량';
+                
+                const calVal = parseNutrientValue(item.AMT_NUM1);
+                const proteinVal = parseNutrientValue(item.AMT_NUM3);
+                const fatVal = parseNutrientValue(item.AMT_NUM4);
+                const carbsVal = parseNutrientValue(item.AMT_NUM6);
+
+                const calText = (calVal !== null) ? `${calVal} kcal` : '표기 없음';
+
+                html += `
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <h5 class="font-bold text-slate-800">${name}</h5>
+                                <span class="text-[10px] text-slate-400">(${serving})</span>
+                            </div>
+                            <div class="text-[10px] text-slate-500">
+                                탄수화물: ${carbsVal ?? '-'}g | 단백질: ${proteinVal ?? '-'}g | 지방: ${fatVal ?? '-'}g
+                            </div>
+                        </div>
+                        <span class="font-medium text-slate-900 bg-white border border-slate-200 px-2.5 py-1 rounded-lg shrink-0">
+                            ${calText}
+                        </span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function resetForm() {
+            document.getElementById('healthForm').reset();
+            updateGenderUI();
+            generateAIPlan();
+        }
+    </script>
+</body>
+</html>
