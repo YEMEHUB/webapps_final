@@ -1,1 +1,750 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>청소년 건강 식단 & 생활 플래너</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        * { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-emerald-50/30 text-slate-800 min-h-screen pb-16">
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-emerald-100 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-emerald-200">
+                    🌱
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">청소년 건강 밸런스 핏</h1>
+                    <p class="text-xs text-slate-500">맞춤 식단 · 운동 · 수면 케어 플래너</p>
+                </div>
+            </div>
+            <div id="todayDate" class="text-xs font-semibold px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                <!-- 날짜 출력 -->
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- 1. 신체 및 생활 패턴 입력 섹션 -->
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+            <h2 class="font-bold text-slate-800 text-base mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-gear text-emerald-500"></i> 나의 신체 & 생활 패턴 정보
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 신체 정보 -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-weight-scale text-emerald-600"></i> 신체 스펙
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">키 (cm)</label>
+                            <input type="number" id="heightInput" value="165" placeholder="165"
+                                   class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">체중 (kg)</label>
+                            <input type="number" id="weightInput" value="60" placeholder="60"
+                                   class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 운동 정보 -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3 relative">
+                    <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-person-running text-amber-500"></i> 운동 활동 & 타이머
+                    </h3>
+                    
+                    <!-- 운동 자동완성 검색 -->
+                    <div class="relative">
+                        <label class="text-xs text-slate-500 block mb-1">운동 검색 및 선택 (예: '태' 또는 '러닝' 입력)</label>
+                        <input type="text" id="exerciseSearchInput" placeholder="운동 검색 (예: 태권도, 축구, 러닝, 줄넘기)" value="러닝 (달리기)"
+                               class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500" autocomplete="off">
+                        <!-- 검색 결과 자동완성 드롭다운 -->
+                        <div id="exerciseAutocomplete" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-30 max-h-48 overflow-y-auto"></div>
+                    </div>
+
+                    <!-- 실시간 운동 타이머 및 칼로리 표시 -->
+                    <div class="bg-amber-50/80 p-3 rounded-xl border border-amber-200/60 space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold text-amber-900">
+                            <span><i class="fa-solid fa-stopwatch text-amber-600 mr-1"></i> 실시간 운동 측정</span>
+                            <span id="timerStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-600">대기 중</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <div class="text-lg font-black text-slate-800" id="workoutTimerDisplay">00:00:00</div>
+                            <div class="text-xs font-bold text-amber-600">소모: <span id="burnedKcalDisplay" class="text-sm font-black text-amber-700">0</span> kcal</div>
+                        </div>
+
+                        <!-- 타이머 조작 버튼 -->
+                        <div class="flex gap-1.5 pt-1">
+                            <button id="startWorkoutBtn" class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-lg text-xs font-semibold transition-all">
+                                <i class="fa-solid fa-play mr-1"></i> 시작
+                            </button>
+                            <button id="pauseWorkoutBtn" class="flex-1 py-1.5 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 rounded-lg text-xs font-semibold transition-all hidden">
+                                <i class="fa-solid fa-pause mr-1"></i> 정지
+                            </button>
+                            <button id="resetWorkoutBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition-all">
+                                리셋
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1">하루 총 운동 시간 (시간)</label>
+                        <input type="number" id="exerciseHours" value="1" step="0.5" min="0" max="12"
+                               class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <!-- 수면 정보 -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-bed text-indigo-500"></i> 수면 시간 & 취침
+                    </h3>
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1">취침 시각 (언제 자나요?)</label>
+                        <input type="time" id="sleepTime" value="23:00"
+                               class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1">총 수면 시간 (몇 시간 자나요?)</label>
+                        <input type="number" id="sleepDuration" value="7.5" step="0.5" min="1" max="16"
+                               class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 신체 리포트 요약 카드 -->
+            <div id="profileSummary" class="mt-4 p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs text-emerald-900">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                    <div>BMI: <span id="bmiVal" class="font-bold text-sm text-emerald-700">--</span> (<span id="bmiStatus">--</span>)</div>
+                    <div>적정 체중 범위: <span id="idealWeightRange" class="font-bold text-sm text-emerald-700">--</span> kg</div>
+                    <div>권장 하루 열량: <span id="targetKcal" class="font-bold text-sm text-emerald-700">--</span> kcal</div>
+                </div>
+                <div class="flex items-center gap-2 text-indigo-700 font-medium">
+                    <i class="fa-solid fa-moon"></i>
+                    <span id="sleepSummaryText">수면 정보가 분석되는 중입니다.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 영양소 검색 및 식단 선택 섹션 -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- 좌측: 음식 검색 & 영양 DB -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- 추천 및 검색 -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass text-emerald-500"></i> ① 음식 영양 정보 검색
+                        </h2>
+                        <span class="text-xs text-slate-400">카드를 누르면 식단에 담깁니다</span>
+                    </div>
+
+                    <!-- 검색창 -->
+                    <div class="flex gap-2">
+                        <input type="text" id="searchInput" placeholder="음식명 입력 (예: 김밥, 연어, 비빔밥, 닭가슴살)" 
+                               class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                        <button id="searchBtn" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-5 py-3 rounded-xl font-medium text-sm transition-all shadow-md shadow-emerald-100 flex items-center gap-1.5">
+                            검색
+                        </button>
+                    </div>
+
+                    <!-- 음식 카셀 카탈로그 -->
+                    <div id="foodCatalog" class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                        <!-- JS에서 동적 생성 -->
+                    </div>
+                </div>
+
+                <!-- ③ 오늘 먹은 음식 목록 -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i class="fa-solid fa-utensils text-emerald-500"></i> ③ 오늘 먹은 음식 목록
+                        </h2>
+                        <button id="clearMealBtn" class="text-xs text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> 전체 삭제
+                        </button>
+                    </div>
+
+                    <div id="selectedMealList" class="space-y-2">
+                        <!-- 선택된 음식 항목들이 추가됨 -->
+                    </div>
+
+                    <div id="emptyMealState" class="py-10 text-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-basket-shopping text-3xl mb-2 opacity-40"></i>
+                        <p class="text-xs">위의 음식 카드를 클릭하여 오늘 먹은 음식을 추가해 보세요!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측: 종합 영양 분석 및 식단 평가 결과 리포트 -->
+            <div class="space-y-6">
+
+                <!-- 영양소 요약 대시보드 -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-5">
+                    <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-500"></i> 오늘 먹은 영양 요약
+                    </h2>
+
+                    <!-- 총 칼로리 표시 -->
+                    <div class="bg-slate-900 text-white p-5 rounded-2xl relative overflow-hidden">
+                        <div class="relative z-10">
+                            <span class="text-xs text-slate-400 font-medium">총 섭취 열량</span>
+                            <div class="flex items-baseline gap-1.5 mt-1">
+                                <span id="totalKcal" class="text-3xl font-black text-emerald-400">0</span>
+                                <span class="text-xs text-slate-300">/ <span id="targetKcalDisplay">2000</span> kcal</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                                <div id="kcalProgressBar" class="bg-emerald-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3대 영양소 상세 (탄, 단, 지) -->
+                    <div class="space-y-3">
+                        <!-- 탄수화물 -->
+                        <div class="p-3 bg-amber-50/60 border border-amber-100 rounded-xl">
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-amber-900"><i class="fa-solid fa-wheat-awn text-amber-500 mr-1"></i> 총 탄수화물</span>
+                                <span class="font-extrabold text-amber-700"><span id="totalCarb">0</span>g</span>
+                            </div>
+                            <div class="w-full bg-amber-200/50 h-1.5 rounded-full overflow-hidden">
+                                <div id="carbBar" class="bg-amber-500 h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- 단백질 -->
+                        <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-xl">
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-blue-900"><i class="fa-solid fa-drumstick-bite text-blue-500 mr-1"></i> 총 단백질</span>
+                                <span class="font-extrabold text-blue-700"><span id="totalProtein">0</span>g</span>
+                            </div>
+                            <div class="w-full bg-blue-200/50 h-1.5 rounded-full overflow-hidden">
+                                <div id="proteinBar" class="bg-blue-500 h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- 지방 -->
+                        <div class="p-3 bg-rose-50/60 border border-rose-100 rounded-xl">
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-rose-900"><i class="fa-solid fa-cheese text-rose-500 mr-1"></i> 총 지방</span>
+                                <span class="font-extrabold text-rose-700"><span id="totalFat">0</span>g</span>
+                            </div>
+                            <div class="w-full bg-rose-200/50 h-1.5 rounded-full overflow-hidden">
+                                <div id="fatBar" class="bg-rose-500 h-full rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 식단 영양 피드백 & 적게 먹어야 하는 음식 가이드 -->
+                <div id="feedbackCard" class="p-5 bg-emerald-50 border border-emerald-200 rounded-3xl space-y-3">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-doctor text-emerald-600"></i> 영양 밸런스 분석 코칭
+                    </h3>
+                    <p id="feedbackText" class="text-xs text-slate-700 leading-relaxed">
+                        음식을 선택해 식단을 채워주시면 3대 영양소 비율과 칼로리 치우침을 분석하여 피드백을 안내해 드립니다.
+                    </p>
+                </div>
+
+                <!-- ② 수면 시간 가이드 카드 -->
+                <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-3xl space-y-2">
+                    <h3 class="font-bold text-indigo-950 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-bed text-indigo-600"></i> ② 청소년 수면 헬스 케어
+                    </h3>
+                    <p id="sleepDetailGuide" class="text-xs text-indigo-800 leading-relaxed">
+                        청소년기 적정 수면 시간은 8~10시간입니다. 11시 이전 취침 시 성장호르몬 분비와 체중 관리에 효과적입니다.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // 전역 음식 데이터베이스 (100% 검증된 한국 청소년 선호 식품)
+        const foodDatabase = [
+            { id: 1, name: "한국식 김밥", kcal: 480, carb: 75, protein: 14, fat: 12, img: "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=400&q=80" },
+            { id: 2, name: "블루베리 오트밀", kcal: 320, carb: 54, protein: 11, fat: 6, img: "https://images.unsplash.com/photo-1517673400267-0251440c45dc?auto=format&fit=crop&w=400&q=80" },
+            { id: 3, name: "영양 비빔밥", kcal: 550, carb: 82, protein: 20, fat: 15, img: "https://images.unsplash.com/photo-1553163147-622ab57be1c7?auto=format&fit=crop&w=400&q=80" },
+            { id: 4, name: "연어 아보카도 샐러드", kcal: 380, carb: 12, protein: 28, fat: 24, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80" },
+            { id: 5, name: "과일 그릭 요거트", kcal: 250, carb: 22, protein: 16, fat: 8, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80" },
+            { id: 6, name: "닭가슴살 카레라이스", kcal: 450, carb: 68, protein: 25, fat: 9, img: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=400&q=80" },
+            { id: 7, name: "불고기 덮밥", kcal: 620, carb: 80, protein: 26, fat: 21, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+            { id: 8, name: "계란 채소 볶음밥", kcal: 420, carb: 65, protein: 13, fat: 12, img: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80" },
+            { id: 9, name: "떡볶이 & 튀김", kcal: 680, carb: 110, protein: 12, fat: 20, img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400&q=80" },
+            { id: 10, name: "양념 치킨 (2조각)", kcal: 520, carb: 35, protein: 28, fat: 30, img: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=400&q=80" }
+        ];
+
+        // 운동 데이터베이스 (MET 계수 포함: 계수가 높을수록 칼로리 소모량 증가)
+        const sportsDb = [
+            { name: "태권도", met: 7.5, category: "무술" },
+            { name: "태극권", met: 3.0, category: "무술" },
+            { name: "축구", met: 7.0, category: "구기" },
+            { name: "농구", met: 6.5, category: "구기" },
+            { name: "배드민턴", met: 5.5, category: "라켓" },
+            { name: "테니스", met: 6.0, category: "라켓" },
+            { name: "줄넘기", met: 8.8, category: "유산소" },
+            { name: "빠르게 걷기", met: 4.3, category: "유산소" },
+            { name: "러닝 (달리기)", met: 8.0, category: "유산소" },
+            { name: "자전거 타기", met: 6.0, category: "유산소" },
+            { name: "수영", met: 7.0, category: "유산소" },
+            { name: "플랭크 / 피트니스", met: 4.0, category: "근력" },
+            { name: "댄스 / K-POP 춤", met: 5.0, category: "유산소" }
+        ];
+
+        // 상태 관리 변수
+        let selectedMeals = [];
+        let userProfile = {
+            height: 165,
+            weight: 60,
+            exerciseFactor: 1.4,
+            exerciseHours: 1,
+            sleepTime: "23:00",
+            sleepDuration: 7.5,
+            selectedSportMet: 8.0,
+            selectedSportName: "러닝 (달리기)"
+        };
+
+        // 운동 타이머 변수
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        let isTimerRunning = false;
+
+        // DOM 요소 초기화 및 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // 오늘 날짜 표기
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+            document.getElementById('todayDate').textContent = dateStr;
+
+            // 프로필 입력 이벤트 바인딩
+            const inputs = ['heightInput', 'weightInput', 'exerciseHours', 'sleepTime', 'sleepDuration'];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', updateProfileData);
+                    el.addEventListener('input', updateProfileData);
+                }
+            });
+
+            // 운동 검색 & 자동완성 바인딩
+            initExerciseAutocomplete();
+
+            // 운동 타이머 버턴 바인딩
+            initWorkoutTimer();
+
+            // 음식 검색 이벤트
+            document.getElementById('searchBtn').addEventListener('click', handleFoodSearch);
+            document.getElementById('searchInput').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') handleFoodSearch();
+            });
+
+            // 식단 초기화
+            document.getElementById('clearMealBtn').addEventListener('click', () => {
+                selectedMeals = [];
+                renderSelectedMeals();
+            });
+
+            // 카탈로그 첫 렌더링
+            renderFoodCatalog(foodDatabase);
+            updateProfileData();
+        }
+
+        // 운동 검색 및 자동완성 처리
+        function initExerciseAutocomplete() {
+            const inputEl = document.getElementById('exerciseSearchInput');
+            const dropdownEl = document.getElementById('exerciseAutocomplete');
+
+            inputEl.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (!query) {
+                    dropdownEl.classList.add('hidden');
+                    return;
+                }
+
+                // 검색어 매칭 (예: '태' ➔ 태권도, 태극권)
+                const matches = sportsDb.filter(s => s.name.toLowerCase().includes(query));
+
+                if (matches.length > 0) {
+                    dropdownEl.innerHTML = '';
+                    matches.forEach(sport => {
+                        const item = document.createElement('div');
+                        item.className = "px-4 py-2 hover:bg-emerald-50 cursor-pointer text-xs font-semibold text-slate-700 flex justify-between items-center border-b border-slate-100 last:border-0";
+                        item.innerHTML = `
+                            <span><i class="fa-solid fa-person-running text-amber-500 mr-1.5"></i>${sport.name}</span>
+                            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${sport.category} (강도 ${sport.met})</span>
+                        `;
+                        item.addEventListener('click', () => {
+                            inputEl.value = sport.name;
+                            userProfile.selectedSportMet = sport.met;
+                            userProfile.selectedSportName = sport.name;
+                            dropdownEl.classList.add('hidden');
+                            updateProfileData();
+                        });
+                        dropdownEl.appendChild(item);
+                    });
+                    dropdownEl.classList.remove('hidden');
+                } else {
+                    dropdownEl.classList.add('hidden');
+                }
+            });
+
+            // 외부 클릭 시 드롭다운 닫기
+            document.addEventListener('click', (e) => {
+                if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+                    dropdownEl.classList.add('hidden');
+                }
+            });
+        }
+
+        // 운동 실시간 타이머 조작
+        function initWorkoutTimer() {
+            const startBtn = document.getElementById('startWorkoutBtn');
+            const pauseBtn = document.getElementById('pauseWorkoutBtn');
+            const resetBtn = document.getElementById('resetWorkoutBtn');
+            const statusBadge = document.getElementById('timerStatusBadge');
+
+            startBtn.addEventListener('click', () => {
+                if (!isTimerRunning) {
+                    isTimerRunning = true;
+                    startBtn.classList.add('hidden');
+                    pauseBtn.classList.remove('hidden');
+                    statusBadge.textContent = "운동 중 🔥";
+                    statusBadge.className = "px-2 py-0.5 rounded-full text-[10px] bg-amber-500 text-white animate-pulse";
+
+                    timerInterval = setInterval(() => {
+                        elapsedSeconds++;
+                        updateTimerUI();
+                    }, 1000);
+                }
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                if (isTimerRunning) {
+                    isTimerRunning = false;
+                    clearInterval(timerInterval);
+                    pauseBtn.classList.add('hidden');
+                    startBtn.classList.remove('hidden');
+                    statusBadge.textContent = "일시정지";
+                    statusBadge.className = "px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-700";
+                }
+            });
+
+            resetBtn.addEventListener('click', () => {
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                elapsedSeconds = 0;
+                pauseBtn.classList.add('hidden');
+                startBtn.classList.remove('hidden');
+                statusBadge.textContent = "대기 중";
+                statusBadge.className = "px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-600";
+                updateTimerUI();
+            });
+        }
+
+        // 타이머 시각 및 소모 칼로리 실시간 계산 UI
+        function updateTimerUI() {
+            const hrs = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(elapsedSeconds % 60).padStart(2, '0');
+
+            document.getElementById('workoutTimerDisplay').textContent = `${hrs}:${mins}:${secs}`;
+
+            // 소모 칼로리 공식 = METs * 체중(kg) * 시간(h) * 1.05
+            const weight = parseFloat(document.getElementById('weightInput').value) || 60;
+            const hours = elapsedSeconds / 3600;
+            const met = userProfile.selectedSportMet || 4.3;
+            const burnedKcal = Math.round(met * weight * hours * 1.05);
+
+            document.getElementById('burnedKcalDisplay').textContent = burnedKcal;
+
+            // 타이머 시간이 누적되면 하루 운동 시간에도 자동 반영 (선택적)
+            if (elapsedSeconds > 0 && elapsedSeconds % 300 === 0) { // 5분마다 자동 업데이트
+                const totalHours = (elapsedSeconds / 3600).toFixed(1);
+                document.getElementById('exerciseHours').value = Math.max(1, parseFloat(totalHours));
+                updateProfileData();
+            }
+        }
+
+        // 사용자 프로필 및 권장 칼로리, BMI 계산
+        function updateProfileData() {
+            const h = parseFloat(document.getElementById('heightInput').value) || 165;
+            const w = parseFloat(document.getElementById('weightInput').value) || 60;
+            const hours = parseFloat(document.getElementById('exerciseHours').value) || 1;
+            const sleepTime = document.getElementById('sleepTime').value || "23:00";
+            const sleepDuration = parseFloat(document.getElementById('sleepDuration').value) || 7.5;
+
+            // 선택된 운동의 강도(MET) 반영
+            const met = userProfile.selectedSportMet || 4.3;
+            const exerciseFactor = 1.2 + (met * 0.05);
+
+            userProfile = { height: h, weight: w, exerciseFactor, exerciseHours: hours, sleepTime, sleepDuration, selectedSportMet: met };
+
+            // BMI 계산 (체중 kg / (키 m)^2)
+            const heightM = h / 100;
+            const bmi = (w / (heightM * heightM)).toFixed(1);
+            
+            // 적정 체중 계산 (BMI 18.5 ~ 22.9 기준 및 표준체중 키(m)^2 * 21)
+            const minIdealW = (18.5 * heightM * heightM).toFixed(1);
+            const maxIdealW = (22.9 * heightM * heightM).toFixed(1);
+            const standardW = (21 * heightM * heightM).toFixed(1);
+
+            let bmiStatus = "정상";
+            if (bmi < 18.5) bmiStatus = `저체중 (적정 대비 -${(minIdealW - w).toFixed(1)}kg)`;
+            else if (bmi >= 23 && bmi < 25) bmiStatus = `과체중 위험 (적정 대비 +${(w - maxIdealW).toFixed(1)}kg)`;
+            else if (bmi >= 25) bmiStatus = `비만 관리 필요 (적정 대비 +${(w - maxIdealW).toFixed(1)}kg)`;
+            else bmiStatus = "정상 (적정 수준 유지 중)";
+
+            // 권장 칼로리 (기초대사량 대략치 * 활동계수)
+            const bmr = (10 * w) + (6.25 * h) - (5 * 16) + 5; 
+            const targetKcal = Math.round(bmr * exerciseFactor + (hours * met * 30));
+
+            document.getElementById('bmiVal').textContent = bmi;
+            document.getElementById('bmiStatus').textContent = bmiStatus;
+            document.getElementById('idealWeightRange').textContent = `${minIdealW} ~ ${maxIdealW} (표준 ${standardW})`;
+            document.getElementById('targetKcal').textContent = targetKcal.toLocaleString();
+            document.getElementById('targetKcalDisplay').textContent = targetKcal.toLocaleString();
+
+            // ② 수면 가이드 업데이트
+            updateSleepGuide(sleepTime, sleepDuration);
+
+            // 영양 대시보드 업데이트
+            renderSelectedMeals();
+        }
+
+        // 수면 상태 진단 가이드
+        function updateSleepGuide(timeStr, hours) {
+            const sleepText = document.getElementById('sleepSummaryText');
+            const sleepDetail = document.getElementById('sleepDetailGuide');
+
+            let guideMsg = `매일 ${timeStr}에 취침하여 ${hours}시간 수면 중입니다. `;
+
+            if (hours < 7) {
+                guideMsg += "⚠️ 청소년기 수면 부족은 섭취 욕구 호르몬(그렐린)을 높여 비만 위험을 높입니다. 8시간 이상 수면을 권장합니다!";
+            } else if (hours >= 8 && hours <= 10) {
+                guideMsg += "✅ 아주 훌륭한 수면 패턴입니다! 성장호르몬 분비와 대사 불균형 예방에 완벽한 조건입니다.";
+            } else {
+                guideMsg += "💡 충분한 휴식을 취하고 계십니다. 다만 10시간 이상 과도한 수면은 낮 동안의 운동량을 감소시킬 수 있습니다.";
+            }
+
+            sleepText.textContent = `${timeStr} 취침 / ${hours}시간 수면 (${hours >= 8 ? '양호' : '주의'})`;
+            sleepDetail.textContent = guideMsg;
+        }
+
+        // 음식 카탈로그 출력
+        function renderFoodCatalog(list) {
+            const catalogEl = document.getElementById('foodCatalog');
+            catalogEl.innerHTML = '';
+
+            list.forEach(food => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-2xl p-2.5 cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all duration-200 flex flex-col justify-between group";
+
+                card.innerHTML = `
+                    <div class="h-24 w-full rounded-xl overflow-hidden bg-slate-200 mb-2 relative">
+                        <img src="${food.img}" alt="${food.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                             onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80'">
+                        <span class="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                            ${food.kcal} kcal
+                        </span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-xs truncate">${food.name}</h4>
+                        <p class="text-[10px] text-slate-500 mt-0.5">탄 ${food.carb}g · 단 ${food.protein}g · 지 ${food.fat}g</p>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    addMealToDiet(food);
+                });
+
+                catalogEl.appendChild(card);
+            });
+        }
+
+        // 검색 처리
+        function handleFoodSearch() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!q) {
+                renderFoodCatalog(foodDatabase);
+                return;
+            }
+
+            const filtered = foodDatabase.filter(f => f.name.toLowerCase().includes(q));
+            if (filtered.length > 0) {
+                renderFoodCatalog(filtered);
+            } else {
+                // DB에 없는 음식일 경우 커스텀 음식 객체 생성 후 추가
+                const customFood = {
+                    id: Date.now(),
+                    name: q,
+                    kcal: 400,
+                    carb: 55,
+                    protein: 15,
+                    fat: 10,
+                    img: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80"
+                };
+                addMealToDiet(customFood);
+                document.getElementById('searchInput').value = '';
+            }
+        }
+
+        // 식단에 음식 추가
+        function addMealToDiet(food) {
+            selectedMeals.push({ ...food, uniqueId: Date.now() + Math.random() });
+            renderSelectedMeals();
+        }
+
+        // 식단에서 음식 제거
+        function removeMealFromDiet(uniqueId) {
+            selectedMeals = selectedMeals.filter(m => m.uniqueId !== uniqueId);
+            renderSelectedMeals();
+        }
+
+        // 선택된 식단 렌더링 및 영양 종합 판정
+        function renderSelectedMeals() {
+            const listEl = document.getElementById('selectedMealList');
+            const emptyEl = document.getElementById('emptyMealState');
+
+            listEl.innerHTML = '';
+
+            if (selectedMeals.length === 0) {
+                emptyEl.style.display = 'block';
+                updateDashboard(0, 0, 0, 0);
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+
+            let totKcal = 0, totCarb = 0, totProt = 0, totFat = 0;
+
+            selectedMeals.forEach(food => {
+                totKcal += food.kcal;
+                totCarb += food.carb;
+                totProt += food.protein;
+                totFat += food.fat;
+
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white transition-colors";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${food.img}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80'">
+                        <div>
+                            <div class="font-bold text-slate-800 text-xs">${food.name}</div>
+                            <div class="text-[10px] text-slate-500">${food.kcal} kcal (탄:${food.carb}g, 단:${food.protein}g, 지:${food.fat}g)</div>
+                        </div>
+                    </div>
+                `;
+
+                const delBtn = document.createElement('button');
+                delBtn.className = "text-slate-400 hover:text-red-500 p-1.5 transition-colors text-xs";
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.addEventListener('click', () => removeMealFromDiet(food.uniqueId));
+
+                item.appendChild(delBtn);
+                listEl.appendChild(item);
+            });
+
+            updateDashboard(totKcal, totCarb, totProt, totFat);
+        }
+
+        // 대시보드 및 영양 밸런스(한쪽으로 치우침 여부) 피드백 자동 판정
+        function updateDashboard(kcal, carb, prot, fat) {
+            document.getElementById('totalKcal').textContent = kcal.toLocaleString();
+            document.getElementById('totalCarb').textContent = carb.toLocaleString();
+            document.getElementById('totalProtein').textContent = prot.toLocaleString();
+            document.getElementById('totalFat').textContent = fat.toLocaleString();
+
+            const targetKcal = parseInt(document.getElementById('targetKcal').textContent.replace(/,/g, '')) || 2000;
+            
+            // 프로그레스바 비율
+            const kcalPercent = Math.min(100, Math.round((kcal / targetKcal) * 100));
+            document.getElementById('kcalProgressBar').style.width = `${kcalPercent}%`;
+
+            // 영양소 칼로리 환산 (탄:4kcal, 단:4kcal, 지:9kcal)
+            const carbKcal = carb * 4;
+            const protKcal = prot * 4;
+            const fatKcal = fat * 9;
+            const calculatedTotalKcal = carbKcal + protKcal + fatKcal || 1;
+
+            const carbRatio = Math.round((carbKcal / calculatedTotalKcal) * 100);
+            const protRatio = Math.round((protKcal / calculatedTotalKcal) * 100);
+            const fatRatio = Math.round((fatKcal / calculatedTotalKcal) * 100);
+
+            document.getElementById('carbBar').style.width = `${Math.min(100, carbRatio)}%`;
+            document.getElementById('proteinBar').style.width = `${Math.min(100, protRatio)}%`;
+            document.getElementById('fatBar').style.width = `${Math.min(100, fatRatio)}%`;
+
+            // 피드백 코칭 텍스트 판정
+            const feedbackCard = document.getElementById('feedbackCard');
+            const feedbackText = document.getElementById('feedbackText');
+
+            if (selectedMeals.length === 0) {
+                feedbackCard.className = "p-5 bg-emerald-50 border border-emerald-200 rounded-3xl space-y-3";
+                feedbackText.textContent = "음식을 선택해 식단을 채워주시면 영양소 치우침 및 비만 예방 가이드를 실시간으로 코칭해 드립니다.";
+                return;
+            }
+
+            let feedbackMessages = [];
+            let isWarning = false;
+
+            // 1. 칼로리 초과 여부
+            if (kcal > targetKcal) {
+                isWarning = true;
+                feedbackMessages.push(`⚠️ 오늘 권장 열량(${targetKcal} kcal)보다 ${kcal - targetKcal} kcal 더 많이 섭취하셨습니다. 저녁 식단 조절이나 추가 운동을 권장합니다.`);
+            }
+
+            // 2. 탄수화물 치우침 감지 (청소년 이상적 탄수화물 비율: 55~65%)
+            if (carbRatio > 65) {
+                isWarning = true;
+                feedbackMessages.push(`⚠️ **탄수화물 비율(${carbRatio}%)이 높습니다!** 떡볶이, 빵, 밥 등 탄수화물 섭취를 적게 해야 청소년 비만을 예방할 수 있습니다. 단백질과 식이섬유 비율을 늘려보세요.`);
+            }
+
+            // 3. 지방 치우침 감지 (이상적 지방 비율: 15~25%)
+            if (fatRatio > 35) {
+                isWarning = true;
+                feedbackMessages.push(`⚠️ **지방 비율(${fatRatio}%)이 지나치게 높습니다!** 튀김이나 기름진 음식을 적게 먹도록 주의하세요.`);
+            }
+
+            // 4. 단백질 부족 감지
+            if (protRatio < 15) {
+                feedbackMessages.push(`💡 성장기 청소년에게는 단백질이 필수입니다. 닭가슴살, 계란, 두부, 연어 등을 보충해 주세요.`);
+            }
+
+            // 올바른 식단일 경우
+            if (!isWarning && feedbackMessages.length === 0) {
+                feedbackCard.className = "p-5 bg-emerald-50 border border-emerald-200 rounded-3xl space-y-3";
+                feedbackText.innerHTML = `🎉 **완벽한 영양 밸런스입니다!** 탄수화물(${carbRatio}%), 단백질(${protRatio}%), 지방(${fatRatio}%) 비율이 훌륭하여 체중 관리 및 건강한 성장에 큰 도움이 됩니다.`;
+            } else {
+                feedbackCard.className = isWarning 
+                    ? "p-5 bg-amber-50 border border-amber-200 rounded-3xl space-y-3"
+                    : "p-5 bg-blue-50 border border-blue-200 rounded-3xl space-y-3";
+                feedbackText.innerHTML = feedbackMessages.join('<br><br>');
+            }
+        }
+    </script>
+</body>
+</html>
